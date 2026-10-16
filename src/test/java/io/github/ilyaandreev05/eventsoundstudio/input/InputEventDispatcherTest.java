@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InputEventDispatcherTest {
     @TempDir Path temp;
@@ -49,6 +50,18 @@ class InputEventDispatcherTest {
             assertEquals(1,sink.events.stream().filter("combo_save"::equals).count());
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,31,0,5));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,31,1,6));
             assertEquals(2,sink.events.stream().filter("combo_save"::equals).count());
+        }
+    }
+
+    @Test void altTabRecencyRequiresBothKeysOnTheSameKeyboard(){
+        RecordingSink sink=new RecordingSink();try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(DefaultConfig.create());
+            assertFalse(dispatcher.altTabPressedWithin(750));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd-1",1,56,1,1)); // KEY_LEFTALT down
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd-2",1,15,1,2)); // KEY_TAB on another device
+            assertFalse(dispatcher.altTabPressedWithin(750));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd-1",1,15,1,3)); // KEY_TAB on the same device
+            assertTrue(dispatcher.altTabPressedWithin(750));
         }
     }
 

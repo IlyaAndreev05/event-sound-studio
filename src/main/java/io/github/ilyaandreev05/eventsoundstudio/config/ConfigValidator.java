@@ -20,6 +20,7 @@ public final class ConfigValidator {
         if (!(settings.get("master_mute") instanceof Boolean)) errors.add("settings.master_mute must be boolean");
         Map<String,Object> input = map(settings.get("input"));
         for (String key : List.of("enable_keyboard","enable_mouse","enable_gnome")) if (!(input.get(key) instanceof Boolean)) errors.add("settings.input."+key+" must be boolean");
+        if (input.containsKey("deduplicate_alt_tab_focus") && !(input.get("deduplicate_alt_tab_focus") instanceof Boolean)) errors.add("settings.input.deduplicate_alt_tab_focus must be boolean");
         if (!Boolean.FALSE.equals(input.get("log_key_sequences"))) errors.add("settings.input.log_key_sequences must remain false");
         if (!(input.get("device_allowlist") instanceof List<?>)) errors.add("settings.input.device_allowlist must be an array");
         Map<String,Object> wheel = map(settings.get("wheel"));

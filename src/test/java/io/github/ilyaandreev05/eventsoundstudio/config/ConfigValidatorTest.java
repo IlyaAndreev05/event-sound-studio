@@ -60,4 +60,14 @@ class ConfigValidatorTest {
         List<String> errors=ConfigValidator.validate(config);
         assertTrue(errors.stream().anyMatch(e->e.contains("mouse_click_policy.mode")));assertTrue(errors.stream().anyMatch(e->e.contains("double_click_window_ms")));assertTrue(errors.stream().anyMatch(e->e.contains("units_per_detent")));
     }
+    @Test void altTabFocusDeduplicationIsOptionalForOlderConfigsAndMustBeBoolean(){
+        Map<String,Object> config=DefaultConfig.create();
+        @SuppressWarnings("unchecked") Map<String,Object> settings=(Map<String,Object>)config.get("settings");
+        @SuppressWarnings("unchecked") Map<String,Object> input=(Map<String,Object>)settings.get("input");
+        assertFalse(Boolean.TRUE.equals(input.get("deduplicate_alt_tab_focus")));
+        input.remove("deduplicate_alt_tab_focus");
+        assertEquals(List.of(),ConfigValidator.validate(config));
+        input.put("deduplicate_alt_tab_focus","yes");
+        assertTrue(ConfigValidator.validate(config).stream().anyMatch(e->e.contains("deduplicate_alt_tab_focus")));
+    }
 }

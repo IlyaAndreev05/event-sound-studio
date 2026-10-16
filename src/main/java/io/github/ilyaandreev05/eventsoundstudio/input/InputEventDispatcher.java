@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Normalizes evdev keyboard/mouse events; raw codes and key states remain only in memory. */
 public final class InputEventDispatcher implements AutoCloseable {
@@ -20,6 +21,7 @@ public final class InputEventDispatcher implements AutoCloseable {
     private final ScheduledExecutorService timers=Executors.newSingleThreadScheduledExecutor(r->{Thread t=new Thread(r,"ess-input-timers");t.setDaemon(true);return t;});
     private volatile Map<String,Object> config=Map.of();
     private volatile List<Map<String,Object>> combos=List.of();
+    private final AtomicLong lastAltTabNanos=new AtomicLong(Long.MIN_VALUE);
     public InputEventDispatcher(EventRouter router){this(new EventSink(){public boolean hasEnabledBinding(String event){return router.hasEnabledBinding(event);}public boolean trigger(String event){return router.trigger(event);}});}
     InputEventDispatcher(EventSink router){this.router=router;}
     public synchronized void updateConfig(Map<String,Object> config){this.config=config;List<Map<String,Object>> next=new ArrayList<>();Object raw=config.get("combos");if(raw instanceof List<?> list)for(Object item:list)if(item instanceof Map<?,?> map){Map<String,Object> c=new HashMap<>();map.forEach((k,v)->c.put(String.valueOf(k),v));next.add(Map.copyOf(c));}combos=List.copyOf(next);}
@@ -38,6 +40,7 @@ public final class InputEventDispatcher implements AutoCloseable {
     public void previewMouseButton(String button){Integer code=BUTTONS.entrySet().stream().filter(entry->entry.getValue().equals(button)).map(Map.Entry::getKey).findFirst().orElse(null);if(code==null)return;String device="ui-preview-mouse";accept(new EvdevInputService.RawEvent(device,1,code,1,System.nanoTime()));accept(new EvdevInputService.RawEvent(device,1,code,0,System.nanoTime()));}
     public void reset(String deviceId){DeviceState state=devices.remove(deviceId);if(state!=null)synchronized(state){state.pressed.clear();state.wheel.clear();state.highRes.clear();state.pendingClicks.values().forEach(f->f.cancel(false));state.pendingClicks.clear();}}
     int pressedKeyCount(String deviceId){DeviceState state=devices.get(deviceId);if(state==null)return 0;synchronized(state){return state.pressed.size();}}
+    public boolean altTabPressedWithin(long windowMs){long last=lastAltTabNanos.get();if(last==Long.MIN_VALUE)return false;long elapsed=System.nanoTime()-last;return elapsed>=0&&elapsed<=TimeUnit.MILLISECONDS.toNanos(windowMs);}
     private void key(DeviceState state,int code,int value){
         String key=KEYS.get(code);String button=BUTTONS.get(code);
         if(key==null&&button==null)return;
@@ -46,7 +49,9 @@ public final class InputEventDispatcher implements AutoCloseable {
         if(button!=null){mouseButton(state,button,down);return;}
         if(down){
             if(!state.pressed.add(key))return;
-            state.lastRepeatNanos.put(key,System.nanoTime());
+            long now=System.nanoTime();
+            if(("KEY_TAB".equals(key)&&hasAlt(state.pressed))||(isAlt(key)&&state.pressed.contains("KEY_TAB")))lastAltTabNanos.set(now);
+            state.lastRepeatNanos.put(key,now);
             Map<String,Object> combo=matchingCombo(state.pressed,state);
             if(combo!=null){state.firedCombos.add(comboIdentity(combo));String event=String.valueOf(combo.getOrDefault("event",combo.get("id")));router.trigger(event);String policy=String.valueOf(combo.getOrDefault("policy","ONLY_COMBO"));
                 if("ONLY_COMBO".equals(policy)){
@@ -139,6 +144,8 @@ public final class InputEventDispatcher implements AutoCloseable {
         return null;
     }
     private boolean isModifier(String key){return key.contains("CTRL")||key.contains("SHIFT")||key.contains("ALT")||key.contains("META");}
+    private static boolean isAlt(String key){return "KEY_LEFTALT".equals(key)||"KEY_RIGHTALT".equals(key);}
+    private static boolean hasAlt(Set<String> keys){return keys.contains("KEY_LEFTALT")||keys.contains("KEY_RIGHTALT");}
     private long mouseDoubleWindowNanos(){return (long)(num(map(map(config.get("settings")).get("mouse_click_policy")).get("double_click_window_ms"),250)*1_000_000);}
     private String mouseClickPolicy(){return String.valueOf(map(map(config.get("settings")).get("mouse_click_policy")).getOrDefault("mode","immediate_plus_double"));}
     private int wheelUnits(){return Math.max(1,(int)Math.round(num(map(map(config.get("settings")).get("wheel")).get("units_per_detent"),120)));}

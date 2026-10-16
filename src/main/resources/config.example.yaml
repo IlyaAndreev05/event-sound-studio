@@ -22,6 +22,7 @@ settings:
     enable_keyboard: false
     enable_mouse: false
     enable_gnome: false
+    deduplicate_alt_tab_focus: false
     device_allowlist: []
     log_key_sequences: false
   wheel:

@@ -18,7 +18,7 @@ public final class DefaultConfig {
                 "default_cooldown_ms", 20, "mouse_click_policy", map("mode", "immediate_plus_double", "double_click_window_ms", 250),
                 "keyboard_repeat", map("mode", "ignore", "minimum_interval_ms", 180),
                 "input", map("enable_keyboard", false, "enable_mouse", false, "enable_gnome", false,
-                        "device_allowlist", new ArrayList<>(), "log_key_sequences", false),
+                        "deduplicate_alt_tab_focus", false, "device_allowlist", new ArrayList<>(), "log_key_sequences", false),
                 "wheel", map("mode", "one_pulse_per_detent", "high_resolution_preferred", true,
                         "units_per_detent", 120, "legacy_deduplication", true,
                         "calibration", map("observed_detents", 0, "observed_units", 0))));
