@@ -102,6 +102,24 @@ class ConfigArchiveTest {
         }
     }
 
+    @Test void legacyOutputNameMatchesOneStableMixerSelectorButNotAmbiguousChoices() throws Exception {
+        Path sourceDir = temp.resolve("legacy-output-source");
+        Path archive = temp.resolve("legacy-output.ess.zip");
+        Map<String, Object> config = DefaultConfig.create();
+        maps(config.get("profiles")).stream().filter(profile -> "desk".equals(profile.get("id")))
+                .findFirst().orElseThrow().put("output", "USB output");
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+            ConfigArchive.exportArchive(archive, config, source.dataDirectory());
+        }
+
+        String firstMixer = "java-sound-v1|USB+output|Acme|USB+DAC";
+        String secondMixer = "java-sound-v1|USB+output|Other|USB+DAC";
+        try (ConfigArchive.PreparedImport prepared = ConfigArchive.prepare(archive)) {
+            assertEquals(List.of(), prepared.unavailableOutputSelectors(List.of("system_default", firstMixer)));
+            assertEquals(List.of("USB output"), prepared.unavailableOutputSelectors(List.of(firstMixer, secondMixer)));
+        }
+    }
+
     @Test void profileArchiveIncludesOnlySelectedBindingsAndTheirSoundAssets() throws Exception {
         Path sourceDir = temp.resolve("profile-source");
         try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {

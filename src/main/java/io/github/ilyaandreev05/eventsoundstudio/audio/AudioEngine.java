@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,12 +45,59 @@ public final class AudioEngine implements AutoCloseable {
     public long clippedSamples() { return clippedSamples.get(); }
     public long droppedRequests() { return droppedRequests.get(); }
     public static List<String> availableOutputs() {
-        return selectableOutputNames(probeOutputs());
+        return availableOutputOptions().stream().map(OutputOption::selector).toList();
     }
+    public static List<OutputOption> availableOutputOptions() { return selectableOutputOptions(probeOutputs()); }
     static List<String> selectableOutputNames(List<OutputProbe> probes) {
         List<String> result = new ArrayList<>(); result.add("system_default");
         for (OutputProbe output : probes) if (output.supportsPcm48Stereo()) result.add(output.name());
         return List.copyOf(result);
+    }
+    static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes) {
+        List<OutputProbe> supported = probes.stream().filter(OutputProbe::supportsPcm48Stereo).toList();
+        Map<String, Integer> identityCounts = new HashMap<>();
+        for (OutputProbe output : supported) identityCounts.merge(identity(output), 1, Integer::sum);
+        List<OutputProbe> unique = new ArrayList<>();
+        Set<String> selectors = new LinkedHashSet<>();
+        for (OutputProbe output : supported) {
+            if (identityCounts.getOrDefault(identity(output), 0) == 1 && selectors.add(output.selector())) unique.add(output);
+        }
+        Map<String, Integer> nameCounts = new HashMap<>();
+        Map<String, Integer> labelCounts = new HashMap<>();
+        for (OutputProbe output : unique) nameCounts.merge(output.name(), 1, Integer::sum);
+        for (OutputProbe output : unique) labelCounts.merge(optionLabel(output, nameCounts), 1, Integer::sum);
+        List<OutputOption> result = new ArrayList<>();
+        result.add(new OutputOption("system_default", "system_default"));
+        for (OutputProbe output : unique) {
+            String label = optionLabel(output, nameCounts);
+            if (labelCounts.getOrDefault(label, 0) > 1) {
+                String hint = MixerOutputSelector.identityHint(output.selector());
+                if (!hint.isBlank()) label += " · " + hint;
+            }
+            result.add(new OutputOption(output.selector(), label));
+        }
+        return List.copyOf(result);
+    }
+    private static String identity(OutputProbe output) {
+        String key = MixerOutputSelector.canonicalKey(output.selector());
+        return key == null ? output.selector() : key;
+    }
+    private static String optionLabel(OutputProbe output, Map<String, Integer> nameCounts) {
+        String name = output.name().isBlank() ? MixerOutputSelector.displayName(output.selector()) : output.name();
+        if (nameCounts.getOrDefault(output.name(), 0) <= 1) return name;
+        String detail = java.util.stream.Stream.of(output.vendor(), output.description()).filter(value -> value != null && !value.isBlank())
+                .distinct().collect(java.util.stream.Collectors.joining(" · "));
+        return detail.isBlank() ? name : name + " — " + detail;
+    }
+    public static boolean outputAvailable(String selector, List<String> availableSelectors) {
+        return MixerOutputSelector.available(selector, availableSelectors);
+    }
+    public static String outputDisplayName(String selector, List<OutputOption> options) {
+        if (selector == null) return "";
+        List<OutputOption> matches = options.stream()
+                .filter(option -> MixerOutputSelector.equivalent(selector, option.selector())).toList();
+        if (matches.size() == 1) return matches.getFirst().displayName();
+        return MixerOutputSelector.displayName(selector);
     }
     public static List<OutputProbe> probeOutputs() {
         List<OutputProbe> result = new ArrayList<>();
@@ -58,7 +106,8 @@ public final class AudioEngine implements AutoCloseable {
             try {
                 Mixer mixer=AudioSystem.getMixer(info);
                 int sourceLineTypes=mixer.getSourceLineInfo().length;
-                if (sourceLineTypes > 0) result.add(new OutputProbe(info.getName(), info.getVendor(), info.getVersion(), sourceLineTypes, mixer.isLineSupported(requested)));
+                if (sourceLineTypes > 0) result.add(new OutputProbe(MixerOutputSelector.forMixer(info), info.getName(),
+                        info.getVendor(), info.getDescription(), info.getVersion(), sourceLineTypes, mixer.isLineSupported(requested)));
             } catch (Exception ignored) { }
         }
         return List.copyOf(result);
@@ -103,7 +152,7 @@ public final class AudioEngine implements AutoCloseable {
             Set<String> neededOutputs=new HashSet<>();neededOutputs.add(render.output());voices.forEach(v->neededOutputs.add(v.output));
             outputs.keySet().removeIf(output->{if(neededOutputs.contains(output))return false;outputs.get(output).close();return true;});
             long now=System.currentTimeMillis();
-            for(String route:neededOutputs){OutputState output=outputs.computeIfAbsent(route,ignored->new OutputState());if(output.line==null&&now-output.lastOpenAttempt>1500){output.lastOpenAttempt=now;try{output.open(lineProvider.open(route));announce("Audio output ready: "+(route.equals("system_default")?"system default":route));}catch(Exception e){announce("Audio output unavailable ("+route+"): "+safe(e));}}}
+            for(String route:neededOutputs){OutputState output=outputs.computeIfAbsent(route,ignored->new OutputState());if(output.line==null&&now-output.lastOpenAttempt>1500){output.lastOpenAttempt=now;try{output.open(lineProvider.open(route));announce("Audio output ready: "+(route.equals("system_default")?"system default":MixerOutputSelector.displayName(route)));}catch(Exception e){announce("Audio output unavailable ("+MixerOutputSelector.displayName(route)+"): "+safe(e));}}}
             for(OutputState output:outputs.values())Arrays.fill(output.mix,0);
             for(int frame=0;frame<BLOCK_FRAMES;frame++){
                 long absoluteFrame=frameClock+frame;
@@ -139,8 +188,7 @@ public final class AudioEngine implements AutoCloseable {
     private SourceDataLine openLine(String output)throws Exception{
         DataLine.Info info=new DataLine.Info(SourceDataLine.class,format); SourceDataLine line;
         if(output!=null&&!output.isBlank()&&!output.equals("system_default")){
-            Mixer.Info match=null;for(Mixer.Info candidate:AudioSystem.getMixerInfo())if(candidate.getName().equals(output)){match=candidate;break;}
-            if(match==null)throw new IllegalArgumentException("Audio output not found: "+output);
+            Mixer.Info match=MixerOutputSelector.resolve(output, AudioSystem.getMixerInfo());
             line=(SourceDataLine)AudioSystem.getMixer(match).getLine(info);
         }else line=(SourceDataLine)AudioSystem.getLine(info);
         line.open(format,BLOCK_FRAMES*4*8);line.start();return line;
@@ -151,7 +199,13 @@ public final class AudioEngine implements AutoCloseable {
     @Override public void close(){if(closed.compareAndSet(false,true)){queue.clear();if(thread!=null)thread.interrupt();}}
 
     private record RenderSettings(double volume,boolean mute,boolean limiter,String output){}
-    public record OutputProbe(String name,String vendor,String version,int sourceLineTypes,boolean supportsPcm48Stereo){}
+    public record OutputProbe(String selector,String name,String vendor,String description,String version,int sourceLineTypes,boolean supportsPcm48Stereo){
+        public OutputProbe(String name,String vendor,String version,int sourceLineTypes,boolean supportsPcm48Stereo){
+            this(MixerOutputSelector.forMixer(name,vendor,"",java.nio.file.Path.of("/proc/asound/cards"),java.nio.file.Path.of("/sys/class/sound")),
+                    name,vendor,"",version,sourceLineTypes,supportsPcm48Stereo);
+        }
+    }
+    public record OutputOption(String selector,String displayName){}
     private record PlayRequest(PcmSound sound,double gain,double pan,int delayMs,int repeats,String overlap,String voiceKey,String output,boolean stopAll){
         PlayRequest(PcmSound sound,double gain,double pan,int delayMs,int repeats,String overlap,String voiceKey,String output){this(sound,gain,pan,delayMs,repeats,overlap,voiceKey,output,false);}
         static PlayRequest haltAll(){return new PlayRequest(null,0,0,0,1,"mix","","system_default",true);}

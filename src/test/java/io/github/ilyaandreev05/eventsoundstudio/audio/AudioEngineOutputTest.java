@@ -31,6 +31,21 @@ class AudioEngineOutputTest {
         assertEquals(List.of("system_default","stereo output"),outputs);
     }
 
+    @Test void outputChoicesUseSelectorsAndHideDuplicatePhysicalIdentities(){
+        AudioEngine.OutputProbe first=new AudioEngine.OutputProbe("java-sound-v1|USB+output|Acme|USB+DAC",
+                "USB output","Acme","USB DAC","1.0",1,true);
+        AudioEngine.OutputProbe second=new AudioEngine.OutputProbe("java-sound-v1|USB+output|Other|USB+DAC",
+                "USB output","Other","USB DAC","1.0",1,true);
+        List<AudioEngine.OutputOption> options=AudioEngine.selectableOutputOptions(List.of(first,second));
+
+        assertEquals(List.of("system_default",first.selector(),second.selector()),
+                options.stream().map(AudioEngine.OutputOption::selector).toList());
+        assertNotEquals(options.get(1).displayName(),options.get(2).displayName());
+        assertEquals(List.of("system_default"), AudioEngine.selectableOutputOptions(List.of(first,
+                new AudioEngine.OutputProbe(first.selector(),"USB output","Acme","USB DAC","1.0",1,true)))
+                .stream().map(AudioEngine.OutputOption::selector).toList());
+    }
+
     @Test void voiceIsWrittenToItsSelectedMixerOnly() throws Exception {
         Map<String,AtomicInteger> audibleWrites=new ConcurrentHashMap<>();CountDownLatch routedAudio=new CountDownLatch(1);
         AudioEngine engine=new AudioEngine(output->fakeLine(output,audibleWrites,routedAudio));

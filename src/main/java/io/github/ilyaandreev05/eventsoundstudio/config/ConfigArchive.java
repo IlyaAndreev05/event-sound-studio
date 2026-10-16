@@ -3,6 +3,7 @@ package io.github.ilyaandreev05.eventsoundstudio.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -417,8 +418,7 @@ public final class ConfigArchive {
             return List.copyOf(selectors);
         }
         public List<String> unavailableOutputSelectors(List<String> availableOutputs) {
-            Set<String> available = new LinkedHashSet<>(availableOutputs);
-            return outputSelectors().stream().filter(selector -> !available.contains(selector)).toList();
+            return outputSelectors().stream().filter(selector -> !MixerOutputSelector.available(selector, availableOutputs)).toList();
         }
         /** Remaps only explicitly selected missing selectors in a full backup; profile packages are portable already. */
         public void remapOutputSelectors(Map<String, String> remapping, List<String> availableOutputs) throws IOException {
