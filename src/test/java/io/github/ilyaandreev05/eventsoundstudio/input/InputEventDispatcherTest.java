@@ -31,6 +31,20 @@ class InputEventDispatcherTest {
         }
     }
 
+    @Test void aKeyUsesItsLetterGroupWhenThereIsNoIndividualBinding(){
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release"));try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(DefaultConfig.create());dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,2));
+            assertEquals(List.of("group:builtin.letters"),sink.events);
+        }
+    }
+
+    @Test void enterUsesItsDedicatedDefaultEvent(){
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_ENTER:press","key:KEY_ENTER:release"));try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(DefaultConfig.create());dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,28,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,28,0,2));
+            assertEquals(List.of("enter_press"),sink.events);
+        }
+    }
+
     @Test void aSingleWinKeyUsesTheModifierGroupOnRelease(){
         RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_LEFTMETA:release");try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(DefaultConfig.create());dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,2));
@@ -39,13 +53,31 @@ class InputEventDispatcherTest {
     }
 
     @Test void winAOnlyComboDoesNotAlsoTriggerTheWinOrLetterGroups(){
-        RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();
-        @SuppressWarnings("unchecked") List<Map<String,Object>> combos=new ArrayList<>((List<Map<String,Object>>)config.get("combos"));
-        combos.add(DefaultConfig.map("id","win-a","keys",List.of("KEY_LEFTMETA","KEY_A"),"policy","ONLY_COMBO","event","win_a"));config.put("combos",combos);
+        RecordingSink sink=new RecordingSink();Map<String,Object> config=configWithCombo("win-a",List.of("KEY_LEFTMETA","KEY_A"),"ONLY_COMBO","win_a");
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,4));
             assertEquals(List.of("win_a"),sink.events);
+        }
+    }
+
+    @Test void comboAndKeysKeepsLetterAndModifierEvents(){
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release","key:KEY_LEFTCTRL:release"));
+        try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(configWithCombo("ctrl-a",List.of("KEY_LEFTCTRL","KEY_A"),"COMBO_AND_KEYS","ctrl_a"));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,0,4));
+            assertEquals(List.of("ctrl_a","group:builtin.letters","group:builtin.modifiers"),sink.events);
+        }
+    }
+
+    @Test void suppressModifiersKeepsTheLetterButConsumesModifierRelease(){
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release","key:KEY_LEFTCTRL:release"));
+        try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(configWithCombo("ctrl-a",List.of("KEY_LEFTCTRL","KEY_A"),"SUPPRESS_MODIFIERS","ctrl_a"));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,0,4));
+            assertEquals(List.of("ctrl_a","group:builtin.letters"),sink.events);
         }
     }
 
@@ -150,5 +182,11 @@ class InputEventDispatcherTest {
     }
     private static final class RecordingSink implements InputEventDispatcher.EventSink{
         final List<String> events=new CopyOnWriteArrayList<>();final Set<String> disabled=new HashSet<>();public boolean hasEnabledBinding(String event){return !disabled.contains(event);}public boolean trigger(String event){events.add(event);return true;}
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String,Object> configWithCombo(String id,List<String> keys,String policy,String event){
+        Map<String,Object> config=DefaultConfig.create();List<Map<String,Object>> combos=new ArrayList<>((List<Map<String,Object>>)config.get("combos"));
+        combos.add(DefaultConfig.map("id",id,"keys",keys,"policy",policy,"event",event));config.put("combos",combos);return config;
     }
 }
