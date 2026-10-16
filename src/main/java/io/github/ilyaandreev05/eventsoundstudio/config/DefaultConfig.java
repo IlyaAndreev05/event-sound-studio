@@ -11,11 +11,12 @@ public final class DefaultConfig {
     public static final Map<String, String> BUILTIN_NAMES = names();
 
     public static Map<String, Object> create() {
-        Map<String, Object> root = map("schema_version", 1, "app", "event-sound-studio", "active_profile", "desk");
+        Map<String, Object> root = map("schema_version", 3, "app", "event-sound-studio", "active_profile", "desk",
+                "graph_routes", new ArrayList<>(), "route_groups", new ArrayList<>(), "saved_copies", new ArrayList<>());
         root.put("source_profiles", map());
         root.put("settings", map("language", "ru", "theme", "system", "master_volume", 0.65, "master_mute", false,
                 "output", "system_default", "background_mode", "continue_audio", "overlap_policy", "mix_with_limiter",
-                "default_cooldown_ms", 20, "mouse_click_policy", map("mode", "immediate_plus_double", "double_click_window_ms", 250),
+                "default_cooldown_ms", 20, "mouse_click_policy", map("mode", "wait_and_suppress", "double_click_window_ms", 250),
                 "keyboard_repeat", map("mode", "ignore", "minimum_interval_ms", 180),
                 "input", map("enable_keyboard", false, "enable_mouse", false, "enable_gnome", false,
                         "deduplicate_alt_tab_focus", false, "device_allowlist", new ArrayList<>(), "log_key_sequences", false),
@@ -49,6 +50,7 @@ public final class DefaultConfig {
                 "members", List.of("KEY_W", "KEY_A", "KEY_S", "KEY_D"), "default_sound", "key-tap"));
         root.put("groups", groups);
         List<Map<String, Object>> bindings = new ArrayList<>();
+        bindings.add(binding("all-key-press", "key_press", "key-tap", true, 5, 0.45, 0, "mix"));
         bindings.add(binding("letters-default", "group:builtin.letters", "key-tap", true, 10, 0.5, 0, "mix"));
         bindings.add(binding("digits-default", "group:builtin.digits", "key-tap-low", true, 10, 0.45, 0, "mix"));
         bindings.add(binding("enter-key", "enter_press", "soft-click", true, 30, 0.6, 0, "mix"));
@@ -60,6 +62,11 @@ public final class DefaultConfig {
         bindings.add(binding("wheel-right", "wheel_right", "wheel-tick", true, 20, 0.5, 10, "restart"));
         bindings.add(binding("save-combo", "combo_save", "notification-two", true, 100, 0.4, 100, "ignore"));
         bindings.add(binding("workspace-change", "desktop_changed", "notification-one", true, 50, 0.3, 250, "ignore"));
+        bindings.add(binding("super-key-press", "key:KEY_LEFTMETA:press", "soft-pop", true, 60, 0.35, 120, "ignore"));
+        bindings.stream().filter(binding -> List.of("all-key-press","letters-default","mouse-click").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 45));
+        bindings.stream().filter(binding -> String.valueOf(binding.get("id")).startsWith("wheel-")).forEach(binding -> binding.put("duration_ms", 28));
+        bindings.stream().filter(binding -> "workspace-change".equals(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 450));
+        bindings.stream().filter(binding -> "super-key-press".equals(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 220));
         bindings.add(binding("window-focus", "window_focus_changed", "subtle-confirm", true, 40, 0.25, 180, "ignore"));
         bindings.add(binding("window-open", "window_opened", "subtle-confirm", false, 35, 0.2, 200, "ignore"));
         bindings.add(binding("window-close", "window_closed", "subtle-cancel", false, 35, 0.2, 200, "ignore"));
@@ -67,7 +74,7 @@ public final class DefaultConfig {
         root.put("bindings", bindings);
         root.put("combos", List.of(map("id", "save", "keys", List.of("KEY_LEFTCTRL", "KEY_S"), "policy", "ONLY_COMBO", "event", "combo_save")));
         root.put("profiles", List.of(
-                map("id", "desk", "name", "Рабочий стол", "enabled_bindings", List.of("letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "custom-test-api"), "output", "system_default", "master_volume", 0.65),
+                map("id", "desk", "name", "Рабочий стол", "enabled_bindings", List.of("all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "custom-test-api"), "output", "system_default", "master_volume", 0.65),
                 map("id", "quiet", "name", "Тихий режим", "enabled_bindings", List.of("custom-test-api"), "output", "system_default", "master_volume", 0.25)));
         root.put("api", map("enabled", false));
         return root;

@@ -17,7 +17,7 @@ class ConfigMigratorTest {
     @TempDir Path temp;
 
     @Test void storeRepairsTheExactLegacyLetterGroupWithoutDroppingConfiguration() throws Exception {
-        Path file=temp.resolve("config.yaml");Map<String,Object> config=DefaultConfig.create();
+        Path file=temp.resolve("config.yaml");Map<String,Object> config=DefaultConfig.create();config.put("schema_version",2);
         @SuppressWarnings("unchecked") List<Map<String,Object>> groups=(List<Map<String,Object>>)config.get("groups");Map<String,Object> letters=groups.stream().filter(g->"builtin.letters".equals(g.get("id"))).findFirst().orElseThrow();
         List<String> malformed=new ArrayList<>();for(char c='A';c<='Z';c++)malformed.add("KEY_A"+c);letters.put("members",malformed);
         new ObjectMapper(new YAMLFactory()).writeValue(file.toFile(),config);

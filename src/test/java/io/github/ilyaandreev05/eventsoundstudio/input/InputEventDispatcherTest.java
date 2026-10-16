@@ -45,15 +45,15 @@ class InputEventDispatcherTest {
         }
     }
 
-    @Test void aSingleWinKeyUsesTheModifierGroupOnRelease(){
-        RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_LEFTMETA:release");try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+    @Test void aSingleWinKeyUsesTheModifierGroupOnPress(){
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_LEFTMETA:press","key:KEY_LEFTMETA:release"));try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(DefaultConfig.create());dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,2));
             assertEquals(List.of("group:builtin.modifiers"),sink.events);
         }
     }
 
     @Test void winAOnlyComboDoesNotAlsoTriggerTheWinOrLetterGroups(){
-        RecordingSink sink=new RecordingSink();Map<String,Object> config=configWithCombo("win-a",List.of("KEY_LEFTMETA","KEY_A"),"ONLY_COMBO","win_a");
+        RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_LEFTMETA:press");Map<String,Object> config=configWithCombo("win-a",List.of("KEY_LEFTMETA","KEY_A"),"ONLY_COMBO","win_a");
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,4));
@@ -62,17 +62,17 @@ class InputEventDispatcherTest {
     }
 
     @Test void comboAndKeysKeepsLetterAndModifierEvents(){
-        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release","key:KEY_LEFTCTRL:release"));
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release","key:KEY_LEFTCTRL:press","key:KEY_LEFTCTRL:release"));
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(configWithCombo("ctrl-a",List.of("KEY_LEFTCTRL","KEY_A"),"COMBO_AND_KEYS","ctrl_a"));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,0,4));
-            assertEquals(List.of("ctrl_a","group:builtin.letters","group:builtin.modifiers"),sink.events);
+            assertEquals(List.of("group:builtin.modifiers","ctrl_a","group:builtin.letters"),sink.events);
         }
     }
 
     @Test void suppressModifiersKeepsTheLetterButConsumesModifierRelease(){
-        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release","key:KEY_LEFTCTRL:release"));
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("key:KEY_A:press","key:KEY_A:release","key:KEY_LEFTCTRL:press","key:KEY_LEFTCTRL:release"));
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(configWithCombo("ctrl-a",List.of("KEY_LEFTCTRL","KEY_A"),"SUPPRESS_MODIFIERS","ctrl_a"));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
@@ -142,9 +142,17 @@ class InputEventDispatcherTest {
     }
 
     @Test void immediateDoubleClickPolicyAddsDoubleEventAfterTwoClicks(){
-        RecordingSink sink=new RecordingSink();try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
-            dispatcher.updateConfig(DefaultConfig.create());for(int i=0;i<2;i++){dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,1,i*2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,0,i*2+1));}
+        RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();@SuppressWarnings("unchecked") Map<String,Object> settings=(Map<String,Object>)config.get("settings");settings.put("mouse_click_policy",DefaultConfig.map("mode","immediate_plus_double","double_click_window_ms",250));try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(config);for(int i=0;i<2;i++){dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,1,i*2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,0,i*2+1));}
             assertEquals(List.of("button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release","button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release","mouse_double_left"),sink.events);
+        }
+    }
+
+    @Test void defaultDoubleClickPolicyDoesNotEmitTwoSingleClickEffects(){
+        RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();assertEquals("wait_and_suppress",((Map<?,?>)config.get("settings")).get("mouse_click_policy") instanceof Map<?,?> policy?policy.get("mode"):null);
+        try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(config);for(int i=0;i<2;i++){dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,1,i*2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,0,i*2+1));}
+            assertEquals(1,sink.events.stream().filter("mouse_double_left"::equals).count());assertEquals(0,sink.events.stream().filter("mouse_left"::equals).count());
         }
     }
 

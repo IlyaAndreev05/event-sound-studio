@@ -16,6 +16,26 @@ import static org.junit.jupiter.api.Assertions.*;
 class ConfigStoreConflictTest {
     @TempDir Path temp;
 
+    @Test void jsonStoreMigratesYamlWithAnExactBackup() throws Exception {
+        Path legacy=temp.resolve("config.yaml"),json=temp.resolve("config.json");
+        Map<String,Object> old=DefaultConfig.create();old.put("schema_version",1);
+        byte[] original=new ObjectMapper(new YAMLFactory()).writeValueAsBytes(old);Files.write(legacy,original);
+        try(ConfigStore store=new ConfigStore(json,legacy)){
+            assertEquals(3,((Number)store.snapshot().get("schema_version")).intValue());
+            assertTrue(Files.readString(json).startsWith("{"));
+            assertArrayEquals(original,Files.readAllBytes(temp.resolve("config.yaml.before-json")));
+            Map<String,Object> saved=store.snapshot();settings(saved).put("master_volume",.41);store.save(saved,store.versionedSnapshot().revision());
+            assertTrue(Files.readString(json).startsWith("{"));
+        }
+    }
+
+    @Test void migrationDoesNotOverwriteExistingBackup() throws Exception {
+        Path legacy=temp.resolve("config.yaml"),json=temp.resolve("config.json"),backup=temp.resolve("config.yaml.before-json");
+        Map<String,Object> old=DefaultConfig.create();old.put("schema_version",1);new ObjectMapper(new YAMLFactory()).writeValue(legacy.toFile(),old);
+        Files.writeString(backup,"keep");assertThrows(java.io.IOException.class,()->new ConfigStore(json,legacy));
+        assertFalse(Files.exists(json));assertEquals("keep",Files.readString(backup));assertTrue(Files.exists(legacy));
+    }
+
     @Test void staleGuiSnapshotCannotOverwriteExternalEditAfterWatcherReloadsIt() throws Exception {
         Path file=temp.resolve("config.yaml");
         try(ConfigStore store=new ConfigStore(file)){

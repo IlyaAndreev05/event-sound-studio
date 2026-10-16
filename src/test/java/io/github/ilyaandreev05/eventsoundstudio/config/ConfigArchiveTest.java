@@ -30,9 +30,10 @@ class ConfigArchiveTest {
         }
 
         Map<String, Object> manifest = readManifest(archive);
-        assertEquals(2, ((Number) manifest.get("version")).intValue());
+        assertEquals(3, ((Number) manifest.get("version")).intValue());
+        assertEquals("config.json",manifest.get("config_entry"));
         assertEquals("event-sound-studio", manifest.get("app"));
-        assertEquals(1, ((Number) manifest.get("config_schema_version")).intValue());
+        assertEquals(3, ((Number) manifest.get("config_schema_version")).intValue());
         assertEquals("full", manifest.get("kind"));
     }
 
@@ -153,8 +154,8 @@ class ConfigArchiveTest {
             }
             assertTrue(entries.containsKey("data/library/profile/selected.wav"));
             assertFalse(entries.containsKey("data/library/profile/unrelated.wav"));
-            ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-            Map<String, Object> packaged = yaml.readValue(entries.get("config.yaml"), new TypeReference<>() {});
+            ObjectMapper json = new ObjectMapper();
+            Map<String, Object> packaged = json.readValue(entries.get("config.json"), new TypeReference<>() {});
             assertEquals("quiet", packaged.get("active_profile"));
             assertEquals(1, maps(packaged.get("profiles")).size());
             assertEquals("system_default", maps(packaged.get("profiles")).getFirst().get("output"));
@@ -432,6 +433,10 @@ class ConfigArchiveTest {
         }
         Map<String, Object> manifest = json.readValue(entries.get("manifest.json"), new TypeReference<>() {});
         edit.accept(manifest);
+        if(manifest.get("version") instanceof Number version&&version.intValue()<3&&entries.containsKey("config.json")){
+            byte[] document=entries.remove("config.json");entries.put("config.yaml",document);manifest.remove("config_entry");
+            @SuppressWarnings("unchecked") Map<String,String> files=(Map<String,String>)manifest.get("files");String digest=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(document));files.remove("config.json");files.put("config.yaml",digest);
+        }
         entries.put("manifest.json", json.writeValueAsBytes(manifest));
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(destination))) {
             for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
