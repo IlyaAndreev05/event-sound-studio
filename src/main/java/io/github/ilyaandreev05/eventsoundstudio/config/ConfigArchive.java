@@ -105,7 +105,8 @@ public final class ConfigArchive {
         packageProfile.put("id", packageProfileId);
         packageProfile.put("name", "en".equals(objectMap(portable.get("settings")).get("language")) ? "Binding set" : "Набор привязок");
         packageProfile.put("enabled_bindings", orderedSelection);
-        packageProfile.put("output", "system_default");
+        packageProfile.put("output", MixerOutputSelector.AUDIO_MATRIX_EVENTS);
+        objectMap(portable.get("settings")).put("preview_output", "system_default");
         profiles.add(packageProfile);
         portable.put("active_profile", packageProfileId);
         exportProfileArchive(destination, portable, dataDirectory, packageProfileId);
@@ -125,7 +126,7 @@ public final class ConfigArchive {
         List<Map<String, Object>> selected = allSounds.stream().filter(sound -> includedIds.contains(String.valueOf(sound.get("id"))))
                 .map(ConfigArchive::deepCopy).toList();
         Map<String, Object> packageConfig = new LinkedHashMap<>();
-        packageConfig.put("schema_version", 3);
+        packageConfig.put("schema_version", ConfigMigrator.CURRENT_SCHEMA_VERSION);
         packageConfig.putIfAbsent("graph_routes", new ArrayList<>());
         packageConfig.putIfAbsent("route_groups", new ArrayList<>());
         packageConfig.putIfAbsent("saved_copies", new ArrayList<>());
@@ -136,8 +137,9 @@ public final class ConfigArchive {
 
     private static List<String> validateSoundSetConfig(Map<String, Object> config) throws IOException {
         int configVersion = number(config.get("schema_version"), -1);
-        if (configVersion >= 1 && configVersion < 3) config.put("schema_version", 3);
-        if (number(config.get("schema_version"), -1) != 3 || !"event-sound-studio".equals(config.get("app")))
+        if (configVersion >= 1 && configVersion < ConfigMigrator.CURRENT_SCHEMA_VERSION)
+            config.put("schema_version", ConfigMigrator.CURRENT_SCHEMA_VERSION);
+        if (number(config.get("schema_version"), -1) != ConfigMigrator.CURRENT_SCHEMA_VERSION || !"event-sound-studio".equals(config.get("app")))
             throw new ArchiveException("Sound-set config has an unsupported app or schema version");
         Object soundsValue = config.get("sounds");
         if (!(soundsValue instanceof List<?> sounds) || sounds.isEmpty()) throw new ArchiveException("Sound-set archive must contain at least one sound");
@@ -213,7 +215,7 @@ public final class ConfigArchive {
         List<Map<String, Object>> allSounds = maps(portable.get("sounds"));
         soundIds.addAll(soundDependencyClosure(allSounds, soundIds));
 
-        profile.put("output", "system_default");
+        profile.put("output", MixerOutputSelector.AUDIO_MATRIX_EVENTS);
         profile.put("enabled_bindings", new ArrayList<>(selectedBindingIds));
         portable.put("profiles", List.of(profile));
         portable.put("active_profile", profileId);
@@ -235,6 +237,7 @@ public final class ConfigArchive {
         input.put("device_allowlist", new ArrayList<>());
         input.put("log_key_sequences", false);
         settings.put("input", input);
+        settings.put("preview_output", "system_default");
         portable.put("settings", settings);
         Map<String, Object> api = objectMap(portable.get("api"));
         api.put("enabled", false);
@@ -282,7 +285,8 @@ public final class ConfigArchive {
             if (manifestPath == null) throw new ArchiveException("Archive must contain manifest.json");
             Map<String, Object> manifest = JSON.readValue(Files.readAllBytes(manifestPath), MAP_TYPE);
             int archiveVersion=number(manifest.get("version"),-1);
-            String configEntry=archiveVersion>=3?String.valueOf(manifest.getOrDefault("config_entry","config.json")):"config.yaml";
+            String legacyDefault=extracted.containsKey("config.json")?"config.json":"config.yaml";
+            String configEntry=String.valueOf(manifest.getOrDefault("config_entry",archiveVersion>=3?"config.json":legacyDefault));
             Path configPath=List.of("config.json","config.yaml").contains(configEntry)?extracted.get(configEntry):null;
             if(configPath==null)throw new ArchiveException("Archive is missing its declared config document");
             Object filesValue = manifest.get("files");
@@ -306,7 +310,11 @@ public final class ConfigArchive {
             if (config == null) throw new ArchiveException("Archive config must be a JSON or YAML mapping");
             int sourceSchema=number(config.get("schema_version"),-1);
             manifest = ArchiveManifestMigrator.migrate(manifest, sourceSchema);
-            if(sourceSchema<3){config.put("schema_version",3);config.putIfAbsent("graph_routes",new ArrayList<>());config.putIfAbsent("route_groups",new ArrayList<>());config.putIfAbsent("saved_copies",new ArrayList<>());ConfigMigrator.migrateKnownDefaults(config,false);manifest.put("config_schema_version",3);}
+            if(sourceSchema<3){config.put("schema_version",3);config.putIfAbsent("graph_routes",new ArrayList<>());config.putIfAbsent("route_groups",new ArrayList<>());config.putIfAbsent("saved_copies",new ArrayList<>());ConfigMigrator.migrateKnownDefaults(config,false);}
+            if(sourceSchema<ConfigMigrator.CURRENT_SCHEMA_VERSION){
+                ConfigMigrator.migrateToCurrentSchema(config,false);
+                manifest.put("config_schema_version",ConfigMigrator.CURRENT_SCHEMA_VERSION);
+            }
             Object kindValue = manifest.get("kind");
             if (!(kindValue instanceof String kind) || !ArchiveManifestMigrator.validKind(kind))
                 throw new ArchiveException("Archive manifest has an unsupported kind");
@@ -422,9 +430,7 @@ public final class ConfigArchive {
         public List<String> outputSelectors() {
             Set<String> selectors = new java.util.TreeSet<>();
             Map<String, Object> settings = objectMap(config.get("settings"));
-            addOutputSelector(selectors, settings.get("output"));
-            for (Map<String, Object> profile : maps(config.get("profiles"))) addOutputSelector(selectors, profile.get("output"));
-            for (Map<String, Object> binding : maps(config.get("bindings"))) addOutputSelector(selectors, binding.get("output"));
+            addOutputSelector(selectors, settings.get("preview_output"));
             return List.copyOf(selectors);
         }
         public List<String> unavailableOutputSelectors(List<String> availableOutputs) {
@@ -445,9 +451,7 @@ public final class ConfigArchive {
 
             Map<String, Object> updated = deepCopy(config);
             Map<String, Object> settings = objectMap(updated.get("settings"));
-            remapOutputField(settings, remapping);
-            for (Map<String, Object> profile : maps(updated.get("profiles"))) remapOutputField(profile, remapping);
-            for (Map<String, Object> binding : maps(updated.get("bindings"))) remapOutputField(binding, remapping);
+            remapPreviewOutputField(settings, remapping);
             List<String> errors = ConfigValidator.validate(updated);
             if (!errors.isEmpty()) throw new ArchiveException("Remapped configuration is invalid: " + String.join("; ", errors));
             config.clear();
@@ -458,12 +462,12 @@ public final class ConfigArchive {
 
     private static void addOutputSelector(Set<String> selectors, Object raw) {
         if (raw instanceof String selector && !selector.isBlank()
-                && !Set.of("system_default", "profile_default").contains(selector)) selectors.add(selector);
+                && !Set.of("system_default", "profile_default", MixerOutputSelector.AUDIO_MATRIX_EVENTS).contains(selector)) selectors.add(selector);
     }
 
-    private static void remapOutputField(Map<String, Object> record, Map<String, String> remapping) {
-        Object raw = record.get("output");
-        if (raw instanceof String selector && remapping.containsKey(selector)) record.put("output", remapping.get(selector));
+    private static void remapPreviewOutputField(Map<String, Object> record, Map<String, String> remapping) {
+        Object raw = record.get("preview_output");
+        if (raw instanceof String selector && remapping.containsKey(selector)) record.put("preview_output", remapping.get(selector));
     }
 
     private static ProfileMerge mergeProfile(Map<String, Object> destination, Map<String, Object> source) throws IOException {
@@ -571,7 +575,7 @@ public final class ConfigArchive {
 
         Map<String, Object> importedProfile = deepCopy(sourceProfiles.getFirst());
         importedProfile.put("id", profileIds.get(String.valueOf(importedProfile.get("id"))));
-        importedProfile.put("output", "system_default");
+        importedProfile.put("output", MixerOutputSelector.AUDIO_MATRIX_EVENTS);
         List<String> enabledBindings = new ArrayList<>();
         Object enabledValue = importedProfile.get("enabled_bindings");
         if (!(enabledValue instanceof List<?> enabled)) throw new ArchiveException("Imported profile has no enabled_bindings list");

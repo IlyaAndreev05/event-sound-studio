@@ -7,7 +7,7 @@ import java.util.Map;
 final class ArchiveManifestMigrator {
     static final String FORMAT = "event-sound-studio-archive";
     static final String APP = "event-sound-studio";
-    static final int CURRENT_VERSION = 3;
+    static final int CURRENT_VERSION = 4;
 
     private ArchiveManifestMigrator() {}
 
@@ -31,6 +31,9 @@ final class ArchiveManifestMigrator {
             } else if (version == 2) {
                 migrateV2ToV3(migrated,configSchemaVersion);
                 version = 3;
+            } else if (version == 3) {
+                migrateV3ToV4(migrated, configSchemaVersion);
+                version = 4;
             } else {
                 throw new ConfigArchive.ArchiveException("No migration is available for archive version " + version);
             }
@@ -51,7 +54,16 @@ final class ArchiveManifestMigrator {
         if(!APP.equals(manifest.get("app")))throw new ConfigArchive.ArchiveException("Archive manifest belongs to another application");
         Integer declared=integer(manifest.get("config_schema_version"));if(declared==null||declared!=configSchemaVersion)throw new ConfigArchive.ArchiveException("Archive manifest config schema does not match its config document");
         if(!(manifest.get("kind") instanceof String kind)||!validKind(kind))throw new ConfigArchive.ArchiveException("Archive manifest has an unsupported kind");
-        manifest.put("config_entry","config.yaml");manifest.put("version",3);
+        manifest.putIfAbsent("config_entry","config.yaml");manifest.put("version",3);
+    }
+
+    private static void migrateV3ToV4(Map<String,Object> manifest,int configSchemaVersion)throws ConfigArchive.ArchiveException{
+        if(!APP.equals(manifest.get("app")))throw new ConfigArchive.ArchiveException("Archive manifest belongs to another application");
+        Integer declared=integer(manifest.get("config_schema_version"));
+        if(declared==null||declared!=configSchemaVersion)throw new ConfigArchive.ArchiveException("Archive manifest config schema does not match its config document");
+        if(!(manifest.get("kind") instanceof String kind)||!validKind(kind))throw new ConfigArchive.ArchiveException("Archive manifest has an unsupported kind");
+        if(!(manifest.get("config_entry") instanceof String))manifest.put("config_entry","config.json");
+        manifest.put("version",4);
     }
 
     private static void migrateV1ToV2(Map<String, Object> manifest, int configSchemaVersion)

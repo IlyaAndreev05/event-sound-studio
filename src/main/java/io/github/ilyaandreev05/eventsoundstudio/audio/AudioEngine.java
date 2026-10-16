@@ -47,13 +47,18 @@ public final class AudioEngine implements AutoCloseable {
     public static List<String> availableOutputs() {
         return availableOutputOptions().stream().map(OutputOption::selector).toList();
     }
-    public static List<OutputOption> availableOutputOptions() { return selectableOutputOptions(probeOutputs()); }
+    public static List<OutputOption> availableOutputOptions() { return selectableOutputOptions(probeOutputs(), PipeWireEventOutput.available()); }
+    /** Physical outputs exposed only to explicit preview/generator actions. */
+    public static List<OutputOption> availablePreviewOutputOptions() { return selectableOutputOptions(probeOutputs(), false); }
     static List<String> selectableOutputNames(List<OutputProbe> probes) {
         List<String> result = new ArrayList<>(); result.add("system_default");
         for (OutputProbe output : probes) if (output.supportsPcm48Stereo()) result.add(output.name());
         return List.copyOf(result);
     }
     static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes) {
+        return selectableOutputOptions(probes, false);
+    }
+    static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes, boolean includeAudioMatrixEvents) {
         List<OutputProbe> supported = probes.stream().filter(OutputProbe::supportsPcm48Stereo).toList();
         Map<String, Integer> identityCounts = new HashMap<>();
         for (OutputProbe output : supported) identityCounts.merge(identity(output), 1, Integer::sum);
@@ -76,6 +81,8 @@ public final class AudioEngine implements AutoCloseable {
             }
             result.add(new OutputOption(output.selector(), label));
         }
+        if (includeAudioMatrixEvents)
+            result.add(new OutputOption(MixerOutputSelector.AUDIO_MATRIX_EVENTS, "Audio Matrix event input"));
         return List.copyOf(result);
     }
     private static String identity(OutputProbe output) {
@@ -94,6 +101,7 @@ public final class AudioEngine implements AutoCloseable {
     }
     public static String outputDisplayName(String selector, List<OutputOption> options) {
         if (selector == null) return "";
+        if (MixerOutputSelector.AUDIO_MATRIX_EVENTS.equals(selector)) return "Audio Matrix event input";
         List<OutputOption> matches = options.stream()
                 .filter(option -> MixerOutputSelector.equivalent(selector, option.selector())).toList();
         if (matches.size() == 1) return matches.getFirst().displayName();
@@ -186,6 +194,7 @@ public final class AudioEngine implements AutoCloseable {
         announce("Audio engine stopped");
     }
     private SourceDataLine openLine(String output)throws Exception{
+        if (MixerOutputSelector.AUDIO_MATRIX_EVENTS.equals(output)) return PipeWireEventOutput.openLine(format);
         DataLine.Info info=new DataLine.Info(SourceDataLine.class,format); SourceDataLine line;
         if(output!=null&&!output.isBlank()&&!output.equals("system_default")){
             Mixer.Info match=MixerOutputSelector.resolve(output, AudioSystem.getMixerInfo());
