@@ -46,6 +46,27 @@ class AudioEngineOutputTest {
                 .stream().map(AudioEngine.OutputOption::selector).toList());
     }
 
+    @Test void eventOutputTargetsOnlyTheReservedAudioMatrixSinkAndDisablesFallback(){
+        List<String> command = PipeWireEventOutput.command();
+        int targetIndex = command.indexOf("--target");
+        assertTrue(targetIndex >= 0);
+        assertEquals(PipeWireEventOutput.NODE_NAME, command.get(targetIndex + 1));
+        String properties = command.stream().filter(argument -> argument.startsWith("--properties="))
+                .findFirst().orElseThrow();
+        assertTrue(properties.contains("\"target.object\":\"audiomatrix_events\""));
+        assertTrue(properties.contains("\"node.dont-fallback\":true"));
+        assertTrue(properties.contains("\"node.dont-reconnect\":true"));
+        assertFalse(command.contains("system_default"));
+    }
+
+    @Test void previewChoicesNeverExposeTheInternalEventSink(){
+        AudioEngine.OutputProbe probe=new AudioEngine.OutputProbe("stereo output","vendor","version",1,true);
+        assertEquals(List.of("system_default",probe.selector()),AudioEngine.selectableOutputOptions(List.of(probe),false)
+                .stream().map(AudioEngine.OutputOption::selector).toList());
+        assertEquals(List.of("system_default",probe.selector(),MixerOutputSelector.AUDIO_MATRIX_EVENTS),
+                AudioEngine.selectableOutputOptions(List.of(probe),true).stream().map(AudioEngine.OutputOption::selector).toList());
+    }
+
     @Test void voiceIsWrittenToItsSelectedMixerOnly() throws Exception {
         Map<String,AtomicInteger> audibleWrites=new ConcurrentHashMap<>();CountDownLatch routedAudio=new CountDownLatch(1);
         AudioEngine engine=new AudioEngine(output->fakeLine(output,audibleWrites,routedAudio));

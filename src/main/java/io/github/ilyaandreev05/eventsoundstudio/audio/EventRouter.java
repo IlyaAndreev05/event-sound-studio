@@ -22,6 +22,7 @@ public final class EventRouter {
     public EventRouter(AudioEngine engine,SoundLibrary library){this.engine=engine;this.library=library;}
     public void update(Map<String,Object> config){
         Map<String,Object> settings=map(config.get("settings"));
+        String previewOutput=String.valueOf(settings.getOrDefault("preview_output","system_default"));
         String activeProfileId=String.valueOf(config.getOrDefault("active_profile","desk"));
         Map<String,ProfileSelection> profiles=new HashMap<>();
         for(Map<String,Object> profile:listMaps(config.get("profiles"))){
@@ -43,11 +44,18 @@ public final class EventRouter {
         }
         Set<String> liveBindingIds=bindings.stream().map(Binding::id).collect(java.util.stream.Collectors.toSet());processedCache.keySet().retainAll(liveBindingIds);
         bindings.sort(Comparator.comparingInt(Binding::priority).reversed());
-        state.set(new RoutingState(List.copyOf(bindings),Map.copyOf(soundVolumes),activeProfile.enabledBindingIds(),Map.copyOf(profiles),Map.copyOf(sourceProfiles),Map.copyOf(eventSources),activeProfileId,activeProfile.volume(),mute,activeProfile.output()));
-        // Profile volume/output are passed per voice so keyboard, mouse, and system events can use independent profiles.
-        engine.updateSettings(1,mute,true,activeProfile.output());
+        state.set(new RoutingState(List.copyOf(bindings),Map.copyOf(soundVolumes),activeProfile.enabledBindingIds(),Map.copyOf(profiles),Map.copyOf(sourceProfiles),Map.copyOf(eventSources),activeProfileId,activeProfile.volume(),mute,previewOutput));
+        // Event voices are explicitly targeted below; the engine's default is reserved for previews and the generator.
+        engine.updateSettings(1,mute,true,previewOutput);
     }
     public boolean trigger(String eventId){
+        return routeEvent(eventId,false);
+    }
+    /** Plays a configured event only because the user requested a GUI preview. */
+    public boolean previewEvent(String eventId){
+        return routeEvent(eventId,true);
+    }
+    private boolean routeEvent(String eventId,boolean preview){
         RoutingState current=state.get();ProfileSelection profile=profileForEvent(current,eventId);if(profile==null)return false;boolean played=false;
         for(Binding binding:current.bindings()){
             if(!binding.enabled()||!profile.enabledBindingIds().contains(binding.id())||!binding.event().equals(eventId))continue;
@@ -55,7 +63,7 @@ public final class EventRouter {
             if(now-previous<binding.cooldownMs()*1_000_000L){droppedCooldowns++;continue;}
             if(binding.renderedSound()==null)continue;
             lastTriggerNanos.put(binding.id(),now);
-            String output=binding.output().equals("profile_default")?profile.output():binding.output();double gain=binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume();
+            String output=preview?current.output():MixerOutputSelector.AUDIO_MATRIX_EVENTS;double gain=binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume();
             engine.play(binding.renderedSound(),gain,binding.pan(),binding.delayMs(),binding.repeat(),binding.overlap(),binding.id(),output);played=true;
         }
         return played;
@@ -66,7 +74,7 @@ public final class EventRouter {
     }
     public boolean playBinding(String bindingId){
         RoutingState current=state.get();Binding binding=current.bindings().stream().filter(item->item.id().equals(bindingId)).findFirst().orElse(null);if(binding==null||binding.renderedSound()==null)return false;
-        ProfileSelection profile=profileForEvent(current,binding.event());if(profile==null)return false;String output=binding.output().equals("profile_default")?profile.output():binding.output();
+        ProfileSelection profile=profileForEvent(current,binding.event());if(profile==null)return false;String output=current.output();
         engine.play(binding.renderedSound(),binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume(),binding.pan(),binding.delayMs(),binding.repeat(),"mix","preview:"+binding.id(),output);return true;
     }
     public boolean playSound(String soundId){

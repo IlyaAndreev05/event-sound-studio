@@ -5,12 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector;
 
 public final class ConfigValidator {
     private ConfigValidator() {}
     public static List<String> validate(Map<String, Object> root) {
         List<String> errors = new ArrayList<>();
-        if (num(root.get("schema_version"), -1) != 3) errors.add("schema_version must be 3");
+        if (num(root.get("schema_version"), -1) != ConfigMigrator.CURRENT_SCHEMA_VERSION) errors.add("schema_version must be " + ConfigMigrator.CURRENT_SCHEMA_VERSION);
         if (!"event-sound-studio".equals(root.get("app"))) errors.add("app must be event-sound-studio");
         Map<String,Object> settings = map(root.get("settings"));
         if (settings.isEmpty()) errors.add("settings is required");
@@ -18,6 +19,12 @@ public final class ConfigValidator {
         if (!Set.of("system","light","dark").contains(settings.get("theme"))) errors.add("settings.theme must be system, light, or dark");
         volume(settings.get("master_volume"), "settings.master_volume", errors);
         if (!(settings.get("master_mute") instanceof Boolean)) errors.add("settings.master_mute must be boolean");
+        if (!MixerOutputSelector.AUDIO_MATRIX_EVENTS.equals(settings.get("output")))
+            errors.add("settings.output must target the isolated Audio Matrix event input");
+        if (!(settings.get("preview_output") instanceof String previewOutput) || previewOutput.isBlank())
+            errors.add("settings.preview_output must be a non-empty output selector");
+        else if (MixerOutputSelector.AUDIO_MATRIX_EVENTS.equals(previewOutput))
+            errors.add("settings.preview_output must not target the isolated event input");
         Map<String,Object> input = map(settings.get("input"));
         for (String key : List.of("enable_keyboard","enable_mouse","enable_gnome")) if (!(input.get(key) instanceof Boolean)) errors.add("settings.input."+key+" must be boolean");
         if (input.containsKey("deduplicate_alt_tab_focus") && !(input.get("deduplicate_alt_tab_focus") instanceof Boolean)) errors.add("settings.input.deduplicate_alt_tab_focus must be boolean");
@@ -84,6 +91,8 @@ public final class ConfigValidator {
             if (b.containsKey("remove_dc")&&!(b.get("remove_dc") instanceof Boolean))errors.add("bindings["+i+"].remove_dc must be boolean");
             if (!Set.of("mix","restart","ignore","queue").contains(b.get("overlap"))) errors.add("bindings["+i+"].overlap is unsupported");
             if (b.containsKey("output")&&(!(b.get("output") instanceof String output)||output.isBlank())) errors.add("bindings["+i+"].output must be a non-empty string");
+            if (b.containsKey("output") && !"profile_default".equals(b.get("output")))
+                errors.add("bindings["+i+"].output must use profile_default; event outputs are selected in Audio Matrix");
             if (b.containsKey("eq")) validateEq(b.get("eq"),"bindings["+i+"].eq",errors);
             String event=String.valueOf(b.get("event"));
             if (!eventIds.contains(event) && !event.startsWith("group:") && !event.startsWith("key:") && !event.startsWith("button:") && !event.startsWith("wheel:")) errors.add("bindings["+i+"] references unknown event " + event);
@@ -97,6 +106,8 @@ public final class ConfigValidator {
         if (!profileIds.contains(String.valueOf(root.get("active_profile")))) errors.add("active_profile does not reference a profile");
         for (int i=0;i<profiles.size();i++) {
             Map<String,Object> profile=profiles.get(i); volume(profile.get("master_volume"),"profiles["+i+"].master_volume",errors);
+            if (!MixerOutputSelector.AUDIO_MATRIX_EVENTS.equals(profile.get("output")))
+                errors.add("profiles["+i+"].output must target the isolated Audio Matrix event input");
             Object enabled=profile.get("enabled_bindings"); if (!(enabled instanceof List<?> list)) errors.add("profiles["+i+"].enabled_bindings must be an array");
             else for (Object id : list) if (!bindingIds.contains(String.valueOf(id))) errors.add("profiles["+i+"] references unknown binding " + id);
         }

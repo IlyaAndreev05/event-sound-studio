@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class MixerOutputSelector {
+    public static final String AUDIO_MATRIX_EVENTS = "audio_matrix_events";
     private static final String JAVA_SOUND_PREFIX = "java-sound-v1|";
     private static final String ALSA_PREFIX = "alsa-v1|";
     private static final Pattern ALSA_PCM = Pattern.compile("(?:\\[|\\b)(?:plug)?hw:(\\d+),(\\d+)(?:\\]|\\b)");
@@ -77,6 +78,7 @@ public final class MixerOutputSelector {
     }
 
     public static String displayName(String selector) {
+        if (AUDIO_MATRIX_EVENTS.equals(selector)) return "Audio Matrix event input";
         Parsed parsed = parse(selector);
         return parsed == null ? selector : parsed.name();
     }

@@ -1,5 +1,5 @@
 {
-  "schema_version" : 3,
+  "schema_version" : 4,
   "app" : "event-sound-studio",
   "active_profile" : "desk",
   "graph_routes" : [ ],
@@ -11,7 +11,8 @@
     "theme" : "system",
     "master_volume" : 0.65,
     "master_mute" : false,
-    "output" : "system_default",
+    "output" : "audio_matrix_events",
+    "preview_output" : "system_default",
     "background_mode" : "continue_audio",
     "overlap_policy" : "mix_with_limiter",
     "default_cooldown_ms" : 20,
@@ -473,22 +474,16 @@
     "members" : [ "KEY_0", "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5", "KEY_6", "KEY_7", "KEY_8", "KEY_9" ],
     "default_sound" : "key-tap"
   }, {
-    "id" : "builtin.letters",
-    "name" : "Буквы",
+    "id" : "builtin.numpad",
+    "name" : "NumPad",
     "protected" : true,
-    "members" : [ "KEY_A", "KEY_B", "KEY_C", "KEY_D", "KEY_E", "KEY_F", "KEY_G", "KEY_H", "KEY_I", "KEY_J", "KEY_K", "KEY_L", "KEY_M", "KEY_N", "KEY_O", "KEY_P", "KEY_Q", "KEY_R", "KEY_S", "KEY_T", "KEY_U", "KEY_V", "KEY_W", "KEY_X", "KEY_Y", "KEY_Z" ],
+    "members" : [ "KEY_KP0", "KEY_KP1", "KEY_KP2", "KEY_KP3", "KEY_KP4", "KEY_KP5", "KEY_KP6", "KEY_KP7", "KEY_KP8", "KEY_KP9", "KEY_KPDOT", "KEY_KPENTER", "KEY_KPPLUS", "KEY_KPMINUS", "KEY_KPASTERISK", "KEY_KPSLASH" ],
     "default_sound" : "key-tap"
   }, {
-    "id" : "builtin.navigation",
-    "name" : "Навигация",
+    "id" : "builtin.function",
+    "name" : "F1–F12",
     "protected" : true,
-    "members" : [ "KEY_ENTER", "KEY_SPACE", "KEY_TAB", "KEY_ESC", "KEY_BACKSPACE", "KEY_DELETE", "KEY_INSERT", "KEY_HOME", "KEY_END", "KEY_PAGEUP", "KEY_PAGEDOWN", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT" ],
-    "default_sound" : "key-tap"
-  }, {
-    "id" : "builtin.mouse",
-    "name" : "Кнопки мыши",
-    "protected" : true,
-    "members" : [ "BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA" ],
+    "members" : [ "KEY_F1", "KEY_F2", "KEY_F3", "KEY_F4", "KEY_F5", "KEY_F6", "KEY_F7", "KEY_F8", "KEY_F9", "KEY_F10", "KEY_F11", "KEY_F12" ],
     "default_sound" : "soft-click"
   }, {
     "id" : "builtin.modifiers",
@@ -497,16 +492,22 @@
     "members" : [ "KEY_LEFTCTRL", "KEY_RIGHTCTRL", "KEY_LEFTALT", "KEY_RIGHTALT", "KEY_LEFTSHIFT", "KEY_RIGHTSHIFT", "KEY_LEFTMETA", "KEY_RIGHTMETA" ],
     "default_sound" : "soft-click"
   }, {
-    "id" : "builtin.function",
-    "name" : "F1–F12",
+    "id" : "builtin.mouse",
+    "name" : "Кнопки мыши",
     "protected" : true,
-    "members" : [ "KEY_F1", "KEY_F2", "KEY_F3", "KEY_F4", "KEY_F5", "KEY_F6", "KEY_F7", "KEY_F8", "KEY_F9", "KEY_F10", "KEY_F11", "KEY_F12" ],
+    "members" : [ "BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA" ],
     "default_sound" : "soft-click"
   }, {
-    "id" : "builtin.numpad",
-    "name" : "NumPad",
+    "id" : "builtin.navigation",
+    "name" : "Навигация",
     "protected" : true,
-    "members" : [ "KEY_KP0", "KEY_KP1", "KEY_KP2", "KEY_KP3", "KEY_KP4", "KEY_KP5", "KEY_KP6", "KEY_KP7", "KEY_KP8", "KEY_KP9", "KEY_KPDOT", "KEY_KPENTER", "KEY_KPPLUS", "KEY_KPMINUS", "KEY_KPASTERISK", "KEY_KPSLASH" ],
+    "members" : [ "KEY_ENTER", "KEY_SPACE", "KEY_TAB", "KEY_ESC", "KEY_BACKSPACE", "KEY_DELETE", "KEY_INSERT", "KEY_HOME", "KEY_END", "KEY_PAGEUP", "KEY_PAGEDOWN", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT" ],
+    "default_sound" : "key-tap"
+  }, {
+    "id" : "builtin.letters",
+    "name" : "Буквы",
+    "protected" : true,
+    "members" : [ "KEY_A", "KEY_B", "KEY_C", "KEY_D", "KEY_E", "KEY_F", "KEY_G", "KEY_H", "KEY_I", "KEY_J", "KEY_K", "KEY_L", "KEY_M", "KEY_N", "KEY_O", "KEY_P", "KEY_Q", "KEY_R", "KEY_S", "KEY_T", "KEY_U", "KEY_V", "KEY_W", "KEY_X", "KEY_Y", "KEY_Z" ],
     "default_sound" : "key-tap"
   }, {
     "id" : "custom.game",
@@ -832,13 +833,13 @@
     "id" : "desk",
     "name" : "Рабочий стол",
     "enabled_bindings" : [ "all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "custom-test-api" ],
-    "output" : "system_default",
+    "output" : "audio_matrix_events",
     "master_volume" : 0.65
   }, {
     "id" : "quiet",
     "name" : "Тихий режим",
     "enabled_bindings" : [ "custom-test-api" ],
-    "output" : "system_default",
+    "output" : "audio_matrix_events",
     "master_volume" : 0.25
   } ],
   "api" : {

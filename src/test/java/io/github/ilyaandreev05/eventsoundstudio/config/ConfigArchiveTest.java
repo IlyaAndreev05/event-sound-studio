@@ -25,22 +25,22 @@ class ConfigArchiveTest {
     @Test void currentArchiveManifestDeclaresApplicationAndConfigSchema() throws Exception {
         Path sourceDir = temp.resolve("manifest-source");
         Path archive = temp.resolve("manifest.ess.zip");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             ConfigArchive.exportArchive(archive, DefaultConfig.create(), source.dataDirectory());
         }
 
         Map<String, Object> manifest = readManifest(archive);
-        assertEquals(3, ((Number) manifest.get("version")).intValue());
+        assertEquals(4, ((Number) manifest.get("version")).intValue());
         assertEquals("config.json",manifest.get("config_entry"));
         assertEquals("event-sound-studio", manifest.get("app"));
-        assertEquals(3, ((Number) manifest.get("config_schema_version")).intValue());
+        assertEquals(4, ((Number) manifest.get("config_schema_version")).intValue());
         assertEquals("full", manifest.get("kind"));
     }
 
     @Test void migratesLegacyV1ManifestAndRejectsFutureOrMismatchedVersions() throws Exception {
         Path sourceDir = temp.resolve("legacy-manifest-source");
         Path archive = temp.resolve("current.ess.zip");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             ConfigArchive.exportArchive(archive, DefaultConfig.create(), source.dataDirectory());
         }
 
@@ -75,16 +75,13 @@ class ConfigArchiveTest {
         Path sourceDir = temp.resolve("output-remap-source");
         Path archive = temp.resolve("output-remap.ess.zip");
         Map<String, Object> sourceConfig = DefaultConfig.create();
-        maps(sourceConfig.get("profiles")).stream().filter(profile -> "desk".equals(profile.get("id")))
-                .findFirst().orElseThrow().put("output", "Old USB DAC");
-        maps(sourceConfig.get("bindings")).stream().filter(binding -> "custom-test-api".equals(binding.get("id")))
-                .findFirst().orElseThrow().put("output", "Old USB DAC");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        ((Map<String,Object>) sourceConfig.get("settings")).put("preview_output", "Old USB DAC");
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             ConfigArchive.exportArchive(archive, sourceConfig, source.dataDirectory());
         }
 
         Path destinationDir = temp.resolve("output-remap-destination");
-        try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.yaml"));
+        try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.json"));
              ConfigArchive.PreparedImport prepared = ConfigArchive.prepare(archive)) {
             List<String> available = List.of("system_default", "Family 17h (Models 00h-0fh)");
             assertEquals(List.of("Old USB DAC"), prepared.unavailableOutputSelectors(available));
@@ -96,9 +93,9 @@ class ConfigArchiveTest {
             ConfigArchive.install(prepared, destination.dataDirectory(), destination);
 
             Map<String, Object> restored = destination.snapshot();
-            assertEquals("Family 17h (Models 00h-0fh)", maps(restored.get("profiles")).stream()
-                    .filter(profile -> "desk".equals(profile.get("id"))).findFirst().orElseThrow().get("output"));
-            assertEquals("Family 17h (Models 00h-0fh)", maps(restored.get("bindings")).stream()
+            assertEquals("Family 17h (Models 00h-0fh)", ((Map<?,?>) restored.get("settings")).get("preview_output"));
+            assertEquals("audio_matrix_events", ((Map<?,?>) restored.get("settings")).get("output"));
+            assertEquals("profile_default", maps(restored.get("bindings")).stream()
                     .filter(binding -> "custom-test-api".equals(binding.get("id"))).findFirst().orElseThrow().get("output"));
         }
     }
@@ -107,9 +104,8 @@ class ConfigArchiveTest {
         Path sourceDir = temp.resolve("legacy-output-source");
         Path archive = temp.resolve("legacy-output.ess.zip");
         Map<String, Object> config = DefaultConfig.create();
-        maps(config.get("profiles")).stream().filter(profile -> "desk".equals(profile.get("id")))
-                .findFirst().orElseThrow().put("output", "USB output");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        ((Map<String,Object>) config.get("settings")).put("preview_output", "USB output");
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             ConfigArchive.exportArchive(archive, config, source.dataDirectory());
         }
 
@@ -123,7 +119,7 @@ class ConfigArchiveTest {
 
     @Test void profileArchiveIncludesOnlySelectedBindingsAndTheirSoundAssets() throws Exception {
         Path sourceDir = temp.resolve("profile-source");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             Map<String, Object> config = DefaultConfig.create();
             Map<String, Object> quiet = maps(config.get("profiles")).stream()
                     .filter(profile -> "quiet".equals(profile.get("id"))).findFirst().orElseThrow();
@@ -131,7 +127,6 @@ class ConfigArchiveTest {
             Map<String, Object> binding = maps(config.get("bindings")).stream()
                     .filter(item -> "custom-test-api".equals(item.get("id"))).findFirst().orElseThrow();
             binding.put("sound", "profile-only");
-            binding.put("output", "hardware-output-id");
 
             Path selectedAsset = source.dataDirectory().resolve("library/profile/selected.wav");
             Path unrelatedAsset = source.dataDirectory().resolve("library/profile/unrelated.wav");
@@ -158,7 +153,8 @@ class ConfigArchiveTest {
             Map<String, Object> packaged = json.readValue(entries.get("config.json"), new TypeReference<>() {});
             assertEquals("quiet", packaged.get("active_profile"));
             assertEquals(1, maps(packaged.get("profiles")).size());
-            assertEquals("system_default", maps(packaged.get("profiles")).getFirst().get("output"));
+            assertEquals("audio_matrix_events", maps(packaged.get("profiles")).getFirst().get("output"));
+            assertEquals("system_default", ((Map<?,?>) packaged.get("settings")).get("preview_output"));
             assertEquals(1, maps(packaged.get("bindings")).size());
             assertEquals("profile_default", maps(packaged.get("bindings")).getFirst().get("output"));
             assertEquals(false, ((Map<String, Object>) ((Map<String, Object>) packaged.get("settings")).get("input")).get("enable_keyboard"));
@@ -173,14 +169,14 @@ class ConfigArchiveTest {
     @Test void profileImportMergesWithoutReplacingSettingsAndRemapsConflictingIds() throws Exception {
         Path sourceDir = temp.resolve("merge-profile-source");
         Path archive = temp.resolve("merge-profile.ess.zip");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             Map<String, Object> config = DefaultConfig.create();
             Map<String, Object> quiet = maps(config.get("profiles")).stream()
                     .filter(profile -> "quiet".equals(profile.get("id"))).findFirst().orElseThrow();
             quiet.put("enabled_bindings", List.of("custom-test-api", "game-group-binding"));
             maps(config.get("bindings")).add(DefaultConfig.map("id", "game-group-binding", "name", "Game group",
                     "event", "group:custom.game", "sound", "profile-only", "enabled", true, "priority", 12,
-                    "volume", 0.8, "cooldown_ms", 0, "overlap", "mix", "output", "unavailable-device"));
+                    "volume", 0.8, "cooldown_ms", 0, "overlap", "mix", "output", "profile_default"));
             Map<String, Object> profileOnly = sound("profile-only", "library/profile/selected.wav");
             profileOnly.put("copy_of", "key-tap");
             maps(config.get("sounds")).add(profileOnly);
@@ -198,7 +194,7 @@ class ConfigArchiveTest {
         }
 
         Path destinationDir = temp.resolve("merge-profile-destination");
-        try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.yaml"));
+        try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.json"));
              ConfigArchive.PreparedImport prepared = ConfigArchive.prepare(archive)) {
             assertTrue(prepared.profileArchive());
             ConfigStore.VersionedSnapshot snapshot=destination.versionedSnapshot();
@@ -224,7 +220,7 @@ class ConfigArchiveTest {
 
             Map<String, Object> importedProfile = maps(merged.get("profiles")).stream()
                     .filter(profile -> "import-quiet".equals(profile.get("id"))).findFirst().orElseThrow();
-            assertEquals("system_default", importedProfile.get("output"));
+            assertEquals("audio_matrix_events", importedProfile.get("output"));
             List<String> importedBindingIds = ((List<?>) importedProfile.get("enabled_bindings")).stream().map(String::valueOf).toList();
             assertEquals(List.of("import-custom-test-api", "game-group-binding"), importedBindingIds);
 
@@ -259,7 +255,7 @@ class ConfigArchiveTest {
     @Test void soundSetImportMergesDependenciesAndRemapsSoundIds() throws Exception {
         Path sourceDir = temp.resolve("sound-set-source");
         Path archive = temp.resolve("sounds.ess.zip");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             Map<String, Object> config = DefaultConfig.create();
             maps(config.get("sounds")).add(sound("base-tone", "library/set/base.wav"));
             Map<String, Object> derived = sound("derived-tone", "library/set/derived.wav");
@@ -284,7 +280,7 @@ class ConfigArchiveTest {
         }
 
         Path destinationDir = temp.resolve("sound-set-destination");
-        try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.yaml"));
+        try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.json"));
              ConfigArchive.PreparedImport prepared = ConfigArchive.prepare(archive)) {
             assertTrue(prepared.soundSetArchive());
             assertFalse(prepared.profileArchive());
@@ -315,7 +311,7 @@ class ConfigArchiveTest {
 
     @Test void bindingSetArchiveContainsOnlyTheSelectedBindings() throws Exception {
         Path sourceDir = temp.resolve("binding-set-source");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             Map<String, Object> config = DefaultConfig.create();
             Path asset = source.dataDirectory().resolve("library/binding-set/custom.wav");
             Files.createDirectories(asset.getParent());
@@ -338,7 +334,7 @@ class ConfigArchiveTest {
 
     @Test void exportsAndRestoresConfigAndReferencedWavWithoutOverwritingCollision() throws Exception {
         Path sourceDir = temp.resolve("source");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             Map<String, Object> config = DefaultConfig.create();
             List<Map<String, Object>> sounds = maps(config.get("sounds"));
             Map<String, Object> settings = (Map<String, Object>) config.get("settings");
@@ -355,7 +351,7 @@ class ConfigArchiveTest {
             ConfigArchive.exportArchive(archive, config, source.dataDirectory());
 
             Path destinationDir = temp.resolve("destination");
-            try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.yaml"));
+            try (ConfigStore destination = new ConfigStore(destinationDir.resolve("config.json"));
                  ConfigArchive.PreparedImport prepared = ConfigArchive.prepare(archive)) {
                 assertEquals(sounds.size(), prepared.soundCount());
                 assertEquals(maps(config.get("profiles")).size(), prepared.profileCount());
@@ -392,7 +388,7 @@ class ConfigArchiveTest {
     @Test void checksumMismatchIsRejected() throws Exception {
         Path sourceDir = temp.resolve("checksum-source");
         Path archive = temp.resolve("valid.ess.zip");
-        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.yaml"))) {
+        try (ConfigStore source = new ConfigStore(sourceDir.resolve("config.json"))) {
             ConfigArchive.exportArchive(archive, DefaultConfig.create(), source.dataDirectory());
         }
         Path corrupt = temp.resolve("corrupt.ess.zip");
@@ -434,8 +430,8 @@ class ConfigArchiveTest {
         Map<String, Object> manifest = json.readValue(entries.get("manifest.json"), new TypeReference<>() {});
         edit.accept(manifest);
         if(manifest.get("version") instanceof Number version&&version.intValue()<3&&entries.containsKey("config.json")){
-            byte[] document=entries.remove("config.json");entries.put("config.yaml",document);manifest.remove("config_entry");
-            @SuppressWarnings("unchecked") Map<String,String> files=(Map<String,String>)manifest.get("files");String digest=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(document));files.remove("config.json");files.put("config.yaml",digest);
+            byte[] document=entries.remove("config.json");entries.put("config.json",document);manifest.remove("config_entry");
+            @SuppressWarnings("unchecked") Map<String,String> files=(Map<String,String>)manifest.get("files");String digest=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(document));files.remove("config.json");files.put("config.json",digest);
         }
         entries.put("manifest.json", json.writeValueAsBytes(manifest));
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(destination))) {

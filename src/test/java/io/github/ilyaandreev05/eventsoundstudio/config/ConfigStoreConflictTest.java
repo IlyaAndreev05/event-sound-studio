@@ -21,7 +21,7 @@ class ConfigStoreConflictTest {
         Map<String,Object> old=DefaultConfig.create();old.put("schema_version",1);
         byte[] original=new ObjectMapper(new YAMLFactory()).writeValueAsBytes(old);Files.write(legacy,original);
         try(ConfigStore store=new ConfigStore(json,legacy)){
-            assertEquals(3,((Number)store.snapshot().get("schema_version")).intValue());
+            assertEquals(4,((Number)store.snapshot().get("schema_version")).intValue());
             assertTrue(Files.readString(json).startsWith("{"));
             assertArrayEquals(original,Files.readAllBytes(temp.resolve("config.yaml.before-json")));
             Map<String,Object> saved=store.snapshot();settings(saved).put("master_volume",.41);store.save(saved,store.versionedSnapshot().revision());
@@ -37,12 +37,12 @@ class ConfigStoreConflictTest {
     }
 
     @Test void staleGuiSnapshotCannotOverwriteExternalEditAfterWatcherReloadsIt() throws Exception {
-        Path file=temp.resolve("config.yaml");
+        Path file=temp.resolve("config.json");
         try(ConfigStore store=new ConfigStore(file)){
             ConfigStore.VersionedSnapshot stale=store.versionedSnapshot();
             Map<String,Object> external=DefaultConfig.create();
             settings(external).put("master_volume",.31);
-            new ObjectMapper(new YAMLFactory()).writeValue(file.toFile(),external);
+            new ObjectMapper().writeValue(file.toFile(),external);
             store.reload();
             byte[] externalBytes=Files.readAllBytes(file);
 
@@ -53,22 +53,22 @@ class ConfigStoreConflictTest {
         }
     }
 
-    @Test void invalidYamlReloadLeavesLastKnownGoodConfigAndBytesUntouched() throws Exception {
-        Path file=temp.resolve("config.yaml");
+    @Test void invalidJsonReloadLeavesLastKnownGoodConfigAndBytesUntouched() throws Exception {
+        Path file=temp.resolve("config.json");
         try(ConfigStore store=new ConfigStore(file)){
             Map<String,Object> lastKnownGood=store.snapshot();
-            String invalid="schema_version: [unterminated\n";
+            String invalid="{\"schema_version\": [unterminated\n";
             Files.writeString(file,invalid);
 
             assertThrows(ConfigStore.ConfigValidationException.class,store::reload);
             assertEquals(lastKnownGood,store.snapshot());
             assertEquals(invalid,Files.readString(file));
-            assertTrue(store.diagnostic().startsWith("YAML could not be parsed:"));
+            assertTrue(store.diagnostic().startsWith("Config could not be parsed:"));
         }
     }
 
     @Test void watcherIgnoresOwnSaveButStillReloadsExternalChanges() throws Exception {
-        Path file=temp.resolve("config.yaml");
+        Path file=temp.resolve("config.json");
         try(ConfigStore store=new ConfigStore(file)){
             LinkedBlockingQueue<String> messages=new LinkedBlockingQueue<>();
             store.addListener(event->messages.add(event.message()));
@@ -81,7 +81,7 @@ class ConfigStoreConflictTest {
 
             Map<String,Object> external=DefaultConfig.create();
             settings(external).put("master_volume",.37);
-            new ObjectMapper(new YAMLFactory()).writeValue(file.toFile(),external);
+            new ObjectMapper().writeValue(file.toFile(),external);
 
             assertEquals("External configuration reloaded",messages.poll(2,TimeUnit.SECONDS));
             assertEquals(.37,settings(store.snapshot()).get("master_volume"));
