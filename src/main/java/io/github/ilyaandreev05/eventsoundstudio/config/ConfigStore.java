@@ -44,12 +44,12 @@ public final class ConfigStore implements AutoCloseable {
     private static Thread daemon(Runnable r,String name){Thread t=new Thread(r,name);t.setDaemon(true);return t;}
 
     public ConfigStore(Path file) throws IOException, ConfigValidationException {
-        this(file,file.toAbsolutePath().normalize().equals(defaultPath())?legacyPath():null);
+        this(activeJsonPath(file),legacyYamlPath(file));
     }
     ConfigStore(Path file,Path legacyFile) throws IOException, ConfigValidationException {
-        this.file=file.toAbsolutePath().normalize(); this.directory=this.file.getParent();
+        this.file=activeJsonPath(file); this.directory=this.file.getParent();
         this.legacyFile=legacyFile==null?null:legacyFile.toAbsolutePath().normalize();
-        this.mapper=this.file.getFileName().toString().endsWith(".json")?new ObjectMapper():new ObjectMapper(new YAMLFactory());
+        this.mapper=new ObjectMapper();
         Files.createDirectories(directory); Files.createDirectories(directory.resolve("assets/sounds")); Files.createDirectories(directory.resolve("library"));
         installBuiltIns();
         migrateLegacyYaml();
@@ -58,6 +58,8 @@ public final class ConfigStore implements AutoCloseable {
     }
     public static Path defaultPath(){String xdg=System.getenv("XDG_CONFIG_HOME");Path base=xdg==null||xdg.isBlank()?Path.of(System.getProperty("user.home"),".config"):Path.of(xdg);return base.resolve("event-sound-studio/config.json");}
     public static Path legacyPath(){return defaultPath().resolveSibling("config.yaml");}
+    private static Path activeJsonPath(Path requested){Path normalized=requested.toAbsolutePath().normalize();String name=normalized.getFileName().toString();if(name.endsWith(".json"))return normalized;if(name.endsWith(".yaml")||name.endsWith(".yml"))return normalized.resolveSibling("config.json");throw new IllegalArgumentException("Active configuration must use config.json");}
+    private static Path legacyYamlPath(Path requested){Path normalized=requested.toAbsolutePath().normalize();String name=normalized.getFileName().toString();if(name.endsWith(".yaml")||name.endsWith(".yml"))return normalized;if(normalized.equals(defaultPath()))return legacyPath();return null;}
     public Path path(){return file;} public Path dataDirectory(){return directory;} public String diagnostic(){return diagnostic;}
     public Map<String,Object> snapshot(){return deep(current);}
     public synchronized VersionedSnapshot versionedSnapshot(){return new VersionedSnapshot(deep(current),fingerprint);}
@@ -86,11 +88,11 @@ public final class ConfigStore implements AutoCloseable {
     public synchronized void reload() throws IOException,ConfigValidationException{load(true);}
     private synchronized void load(boolean notify)throws IOException,ConfigValidationException{
         byte[] bytes=Files.readAllBytes(file);Map<String,Object> parsed;
-        try{parsed=mapper.readValue(bytes,MAP_TYPE);if(parsed==null)throw new IOException("YAML root must be a mapping");}
-        catch(Exception e){diagnostic="YAML could not be parsed: "+e.getMessage();throw new ConfigValidationException(List.of(diagnostic));}
+        try{parsed=mapper.readValue(bytes,MAP_TYPE);if(parsed==null)throw new IOException("Config root must be an object");}
+        catch(Exception e){diagnostic="Config could not be parsed: "+e.getMessage();throw new ConfigValidationException(List.of(diagnostic));}
         int sourceVersion=parsed.get("schema_version") instanceof Number n?n.intValue():-1;
-        boolean migrated=sourceVersion>=1&&sourceVersion<3;
-        if(migrated){parsed.put("schema_version",3);ConfigMigrator.migrateKnownDefaults(parsed);}
+        boolean migrated=sourceVersion>=1&&sourceVersion<ConfigMigrator.CURRENT_SCHEMA_VERSION
+                &&ConfigMigrator.migrateToCurrentSchema(parsed,true);
         List<String> errors=ConfigValidator.validate(parsed);if(!errors.isEmpty()){diagnostic=String.join("; ",errors);throw new ConfigValidationException(errors);}
         if(migrated){bytes=mapper.writeValueAsBytes(parsed);atomicWrite(bytes);}
         current=deep(parsed);fingerprint=hash(bytes);diagnostic="";if(notify)publish(new Event(current,"External configuration reloaded"));
@@ -107,7 +109,7 @@ public final class ConfigStore implements AutoCloseable {
         return fingerprint!=null&&hash(Files.readAllBytes(file)).equals(fingerprint);
     }
     private void atomicWrite(byte[] data)throws IOException{
-            Path temp=Files.createTempFile(directory,".config-",file.getFileName().toString().endsWith(".json")?".json.tmp":".yaml.tmp");try{
+            Path temp=Files.createTempFile(directory,".config-",".json.tmp");try{
             try(FileChannel channel=FileChannel.open(temp,StandardOpenOption.WRITE,StandardOpenOption.TRUNCATE_EXISTING)){channel.write(java.nio.ByteBuffer.wrap(data));channel.force(true);}
             try{Files.setPosixFilePermissions(temp,EnumSet.of(PosixFilePermission.OWNER_READ,PosixFilePermission.OWNER_WRITE));}catch(UnsupportedOperationException ignored){}
             try{Files.move(temp,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException e){throw new IOException("Config filesystem does not support atomic replacement",e);}
@@ -118,8 +120,8 @@ public final class ConfigStore implements AutoCloseable {
         Map<String,Object> parsed;
         try{parsed=new ObjectMapper(new YAMLFactory()).readValue(Files.readAllBytes(legacy),MAP_TYPE);}
         catch(Exception error){throw new ConfigValidationException(List.of("Legacy YAML could not be read; it was left untouched: "+error.getMessage()));}
-        int version=parsed.get("schema_version") instanceof Number n?n.intValue():-1;if(version<1||version>3)throw new ConfigValidationException(List.of("Legacy YAML has an unsupported schema version"));
-        if(version<3){parsed.put("schema_version",3);ConfigMigrator.migrateKnownDefaults(parsed);}List<String> errors=ConfigValidator.validate(parsed);if(!errors.isEmpty())throw new ConfigValidationException(errors);
+        int version=parsed.get("schema_version") instanceof Number n?n.intValue():-1;if(version<1||version>ConfigMigrator.CURRENT_SCHEMA_VERSION)throw new ConfigValidationException(List.of("Legacy YAML has an unsupported schema version"));
+        ConfigMigrator.migrateToCurrentSchema(parsed,true);List<String> errors=ConfigValidator.validate(parsed);if(!errors.isEmpty())throw new ConfigValidationException(errors);
         Path backup=legacy.resolveSibling("config.yaml.before-json");if(Files.exists(backup))throw new IOException("Legacy backup already exists; refusing to overwrite "+backup);
         Files.copy(legacy,backup);try{atomicWrite(mapper.writeValueAsBytes(parsed));}catch(IOException|RuntimeException failure){Files.deleteIfExists(file);throw failure;}
     }

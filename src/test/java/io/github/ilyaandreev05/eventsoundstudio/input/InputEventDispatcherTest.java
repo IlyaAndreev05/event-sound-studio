@@ -165,7 +165,7 @@ class InputEventDispatcherTest {
     }
 
     @Test void synReportDoesNotClearHeldKeysAndOnlyComboConsumesItsKeys() throws Exception {
-        try (ConfigStore store = new ConfigStore(temp.resolve("config.yaml"));
+        try (ConfigStore store = new ConfigStore(temp.resolve("config.json"));
              SoundLibrary library = new SoundLibrary(store);
              AudioEngine engine = new AudioEngine()) {
             EventRouter router = new EventRouter(engine, library);

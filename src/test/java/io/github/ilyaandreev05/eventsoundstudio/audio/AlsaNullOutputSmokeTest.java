@@ -48,7 +48,7 @@ class AlsaNullOutputSmokeTest {
         AudioEngine engine = new AudioEngine();
         AtomicReference<String> outputStatus = new AtomicReference<>("");
         CountDownLatch outputReady = new CountDownLatch(1);
-        try (ConfigStore store = new ConfigStore(temp.resolve("config.yaml"));
+        try (ConfigStore store = new ConfigStore(temp.resolve("config.json"));
              SoundLibrary library = new SoundLibrary(store)) {
             library.loadAll((java.util.List<Map<String, Object>>) config.get("sounds")).get(5, TimeUnit.SECONDS);
             EventRouter router = new EventRouter(engine, library);

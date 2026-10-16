@@ -35,7 +35,7 @@ class EventPipelineLatencyLiveSmokeTest {
         AtomicReference<Trial> activeTrial = new AtomicReference<>();
         AudioEngine engine = new AudioEngine(ignored -> recordingLine(activeTrial));
         List<Long> elapsedNanos = new ArrayList<>();
-        try (ConfigStore store = new ConfigStore(temp.resolve("config.yaml"));
+        try (ConfigStore store = new ConfigStore(temp.resolve("config.json"));
              SoundLibrary library = new SoundLibrary(store)) {
             Map<String, Object> config = DefaultConfig.create();
             List<Map<String, Object>> sounds = (List<Map<String, Object>>) config.get("sounds");

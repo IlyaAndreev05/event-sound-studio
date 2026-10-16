@@ -43,4 +43,33 @@ tasks.register('packageDeb', Exec) {
             args.addAll(['--runtime-image', jdkHome])
         commandLine args
     }
+    doLast {
+        def dest = layout.buildDirectory.dir('deb').get().asFile
+        def packageFile = dest.listFiles()?.find { it.name.endsWith("_${project.version}_amd64.deb") }
+        if (packageFile == null) throw new GradleException('Could not locate the Debian archive to normalize its package version')
+        def extracted = layout.buildDirectory.dir('deb-package-root').get().asFile
+        project.delete(extracted)
+        def runCommand = { List<String> command ->
+            def process = new ProcessBuilder(command).inheritIO().start()
+            if (process.waitFor() != 0) throw new GradleException("Command failed: ${command.first()}")
+        }
+        runCommand(['dpkg-deb', '--raw-extract', packageFile.absolutePath, extracted.absolutePath])
+        def controlFile = new File(extracted, 'DEBIAN/control')
+        def controlText = java.nio.file.Files.readString(controlFile.toPath())
+        controlText = controlText.replaceFirst(/(?m)^Version:.*$/, "Version: ${project.version}")
+        java.nio.file.Files.writeString(controlFile.toPath(), controlText)
+        def extensionId = 'event-sound-studio-events@ilyaandreev05'
+        def extensionDirectory = new File(extracted, "opt/eventsoundstudio/lib/gnome-shell/extensions/${extensionId}")
+        extensionDirectory.mkdirs()
+        copy { from file('gnome/event-sound-studio-events'); include 'metadata.json', 'extension.js'; into extensionDirectory }
+        def helperDirectory = new File(extracted, 'opt/eventsoundstudio/bin')
+        helperDirectory.mkdirs()
+        copy { from files('scripts/install-gnome-events.sh', 'scripts/uninstall-gnome-events.sh'); into helperDirectory }
+        new File(helperDirectory, 'install-gnome-events.sh').setExecutable(true, false)
+        new File(helperDirectory, 'uninstall-gnome-events.sh').setExecutable(true, false)
+        def rebuilt = new File(dest, packageFile.name + '.rebuilt')
+        runCommand(['dpkg-deb', '--build', '--root-owner-group', extracted.absolutePath, rebuilt.absolutePath])
+        java.nio.file.Files.move(rebuilt.toPath(), packageFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        project.delete(extracted)
+    }
 }
