@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["schema_version", "app", "active_profile", "settings", "sounds", "event_types", "groups", "bindings", "combos", "profiles", "api"],
   "properties": {
-    "schema_version": {"const": 1}, "app": {"const": "event-sound-studio"}, "active_profile": {"type": "string"}, "source_profiles": {"type": "object", "properties": {"keyboard": {"type": "string"}, "mouse": {"type": "string"}, "system": {"type": "string"}}, "additionalProperties": false},
+    "schema_version": {"const": 3}, "app": {"const": "event-sound-studio"}, "active_profile": {"type": "string"}, "graph_routes": {"type": "array", "items": {"type": "object"}}, "route_groups": {"type": "array", "items": {"type": "object"}}, "saved_copies": {"type": "array", "items": {"type": "object"}}, "source_profiles": {"type": "object", "properties": {"keyboard": {"type": "string"}, "mouse": {"type": "string"}, "system": {"type": "string"}}, "additionalProperties": false},
     "settings": {"$ref": "#/$defs/settings"}, "sounds": {"type": "array", "items": {"$ref": "#/$defs/sound"}},
     "event_types": {"type": "array", "items": {"$ref": "#/$defs/event"}}, "groups": {"type": "array", "items": {"$ref": "#/$defs/group"}},
     "bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}}, "combos": {"type": "array", "items": {"$ref": "#/$defs/combo"}},

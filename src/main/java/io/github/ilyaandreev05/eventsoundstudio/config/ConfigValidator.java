@@ -10,7 +10,7 @@ public final class ConfigValidator {
     private ConfigValidator() {}
     public static List<String> validate(Map<String, Object> root) {
         List<String> errors = new ArrayList<>();
-        if (num(root.get("schema_version"), -1) != 1) errors.add("schema_version must be 1");
+        if (num(root.get("schema_version"), -1) != 3) errors.add("schema_version must be 3");
         if (!"event-sound-studio".equals(root.get("app"))) errors.add("app must be event-sound-studio");
         Map<String,Object> settings = map(root.get("settings"));
         if (settings.isEmpty()) errors.add("settings is required");

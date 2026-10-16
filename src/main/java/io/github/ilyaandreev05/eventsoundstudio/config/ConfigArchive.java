@@ -47,16 +47,17 @@ public final class ConfigArchive {
         List<String> errors = "sound-set".equals(kind) ? validateSoundSetConfig(config) : ConfigValidator.validate(config);
         if (!errors.isEmpty()) throw new ArchiveException("Configuration is invalid: " + String.join("; ", errors));
         Path root = dataDirectory.toAbsolutePath().normalize();
-        byte[] configBytes = YAML.writeValueAsBytes(config);
+        byte[] configBytes = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(config);
         TreeMap<String, Path> assets = referencedAssets(config, root);
         TreeMap<String, String> hashes = new TreeMap<>();
-        hashes.put("config.yaml", sha256(configBytes));
+        hashes.put("config.json", sha256(configBytes));
         for (var asset : assets.entrySet()) hashes.put("data/" + asset.getKey(), sha256(asset.getValue()));
         Map<String, Object> manifest = new LinkedHashMap<>();
         manifest.put("format", ArchiveManifestMigrator.FORMAT);
         manifest.put("version", ArchiveManifestMigrator.CURRENT_VERSION);
         manifest.put("app", ArchiveManifestMigrator.APP);
         manifest.put("config_schema_version", number(config.get("schema_version"), -1));
+        manifest.put("config_entry","config.json");
         manifest.put("kind", kind);
         manifest.put("files", hashes);
         byte[] manifestBytes = JSON.writerWithDefaultPrettyPrinter().writeValueAsBytes(manifest);
@@ -69,7 +70,7 @@ public final class ConfigArchive {
         try {
             try (OutputStream file = Files.newOutputStream(temp); ZipOutputStream zip = new ZipOutputStream(file)) {
                 put(zip, "manifest.json", manifestBytes);
-                put(zip, "config.yaml", configBytes);
+                put(zip, "config.json", configBytes);
                 for (var asset : assets.entrySet()) put(zip, "data/" + asset.getKey(), asset.getValue());
             }
             try { Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING); }
@@ -124,14 +125,19 @@ public final class ConfigArchive {
         List<Map<String, Object>> selected = allSounds.stream().filter(sound -> includedIds.contains(String.valueOf(sound.get("id"))))
                 .map(ConfigArchive::deepCopy).toList();
         Map<String, Object> packageConfig = new LinkedHashMap<>();
-        packageConfig.put("schema_version", 1);
+        packageConfig.put("schema_version", 3);
+        packageConfig.putIfAbsent("graph_routes", new ArrayList<>());
+        packageConfig.putIfAbsent("route_groups", new ArrayList<>());
+        packageConfig.putIfAbsent("saved_copies", new ArrayList<>());
         packageConfig.put("app", "event-sound-studio");
         packageConfig.put("sounds", selected);
         writeArchive(destination, packageConfig, dataDirectory, "sound-set");
     }
 
     private static List<String> validateSoundSetConfig(Map<String, Object> config) throws IOException {
-        if (number(config.get("schema_version"), -1) != 1 || !"event-sound-studio".equals(config.get("app")))
+        int configVersion = number(config.get("schema_version"), -1);
+        if (configVersion >= 1 && configVersion < 3) config.put("schema_version", 3);
+        if (number(config.get("schema_version"), -1) != 3 || !"event-sound-studio".equals(config.get("app")))
             throw new ArchiveException("Sound-set config has an unsupported app or schema version");
         Object soundsValue = config.get("sounds");
         if (!(soundsValue instanceof List<?> sounds) || sounds.isEmpty()) throw new ArchiveException("Sound-set archive must contain at least one sound");
@@ -267,15 +273,18 @@ public final class ConfigArchive {
                             out.write(buffer, 0, count);
                         }
                     }
-                    if (itemSize == 0 && !name.equals("config.yaml")) throw new ArchiveException("Archive contains an empty resource: " + name);
+                    if (itemSize == 0 && !name.equals("config.yaml") && !name.equals("config.json")) throw new ArchiveException("Archive contains an empty resource: " + name);
                     extracted.put(name, output);
                     zip.closeEntry();
                 }
             }
             Path manifestPath = extracted.get("manifest.json");
-            Path configPath = extracted.get("config.yaml");
-            if (manifestPath == null || configPath == null) throw new ArchiveException("Archive must contain manifest.json and config.yaml");
+            if (manifestPath == null) throw new ArchiveException("Archive must contain manifest.json");
             Map<String, Object> manifest = JSON.readValue(Files.readAllBytes(manifestPath), MAP_TYPE);
+            int archiveVersion=number(manifest.get("version"),-1);
+            String configEntry=archiveVersion>=3?String.valueOf(manifest.getOrDefault("config_entry","config.json")):"config.yaml";
+            Path configPath=List.of("config.json","config.yaml").contains(configEntry)?extracted.get(configEntry):null;
+            if(configPath==null)throw new ArchiveException("Archive is missing its declared config document");
             Object filesValue = manifest.get("files");
             if (!(filesValue instanceof Map<?, ?> files)) throw new ArchiveException("Archive manifest has no file hash table");
             TreeMap<String, String> expected = new TreeMap<>();
@@ -293,15 +302,16 @@ public final class ConfigArchive {
                 if (!file.getValue().equals(sha256(extracted.get(file.getKey())))) throw new ArchiveException("Archive resource checksum failed: " + file.getKey());
             }
 
-            Map<String, Object> config = YAML.readValue(Files.readAllBytes(configPath), MAP_TYPE);
-            if (config == null) throw new ArchiveException("Archive config must be a YAML mapping");
-            manifest = ArchiveManifestMigrator.migrate(manifest, number(config.get("schema_version"), -1));
+            Map<String, Object> config = "config.json".equals(configEntry)?JSON.readValue(Files.readAllBytes(configPath), MAP_TYPE):YAML.readValue(Files.readAllBytes(configPath), MAP_TYPE);
+            if (config == null) throw new ArchiveException("Archive config must be a JSON or YAML mapping");
+            int sourceSchema=number(config.get("schema_version"),-1);
+            manifest = ArchiveManifestMigrator.migrate(manifest, sourceSchema);
+            if(sourceSchema<3){config.put("schema_version",3);config.putIfAbsent("graph_routes",new ArrayList<>());config.putIfAbsent("route_groups",new ArrayList<>());config.putIfAbsent("saved_copies",new ArrayList<>());ConfigMigrator.migrateKnownDefaults(config,false);manifest.put("config_schema_version",3);}
             Object kindValue = manifest.get("kind");
             if (!(kindValue instanceof String kind) || !ArchiveManifestMigrator.validKind(kind))
                 throw new ArchiveException("Archive manifest has an unsupported kind");
             if ("sound-set".equals(kind)) validateSoundSetConfig(config);
             else {
-                ConfigMigrator.migrateKnownDefaults(config);
                 List<String> errors = ConfigValidator.validate(config);
                 if (!errors.isEmpty()) throw new ArchiveException("Imported configuration is invalid: " + String.join("; ", errors));
             }
@@ -749,7 +759,7 @@ public final class ConfigArchive {
         if (raw == null || raw.isBlank() || raw.contains("\\") || raw.contains(":") || raw.startsWith("/")) throw new ArchiveException("Unsafe archive path");
         Path path = Path.of(raw).normalize();
         if (path.isAbsolute() || path.startsWith("..") || !path.toString().replace('\\', '/').equals(raw)) throw new ArchiveException("Unsafe archive path: " + raw);
-        if (!(raw.equals("manifest.json") || raw.equals("config.yaml") || raw.startsWith("data/"))) throw new ArchiveException("Unexpected file in archive: " + raw);
+        if (!(raw.equals("manifest.json") || raw.equals("config.yaml") || raw.equals("config.json") || raw.startsWith("data/"))) throw new ArchiveException("Unexpected file in archive: " + raw);
     }
     private static Path safeRelativePath(String raw) throws IOException {
         if (raw == null || raw.isBlank() || raw.contains("\\") || raw.contains(":") || raw.startsWith("/")) throw new ArchiveException("Sound paths must be relative paths inside the app data folder");

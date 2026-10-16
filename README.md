@@ -1,6 +1,6 @@
 # Event Sound Studio
 
-A local desktop sound library and event-to-effect player. Settings live in `~/.config/event-sound-studio/config.yaml`; built-in and imported WAV files stay beside that YAML as separate assets.
+A local desktop sound library and event-to-effect player, released as version 0.2.0. Settings live in `~/.config/event-sound-studio/config.json`; first launch migrates `config.yaml` and preserves it as `config.yaml.before-json`. The current default document is `src/main/resources/config.example.json`; `config.example.yaml` remains a migration example. Built-in and imported WAV files remain separate assets.
 
 ## Run
 
@@ -8,10 +8,10 @@ Use Java 25 and `./gradlew run`. Build a local Debian package with `./gradlew pa
 
 For a read-only Java Sound output inventory, run `./gradlew run --args='--diagnose-audio'` or `EventSoundStudio --diagnose-audio` from the installed package. It lists stable output selectors and mixer capabilities without opening an output line or playing audio. On ALSA, selectors use the device's sysfs path and PCM device where available; other Java Sound mixers use their name/vendor/description metadata. A selector matching multiple mixers is not offered, and legacy mixer names resolve only when unique. Inventory cannot prove which physical connector a system-default mixer reaches.
 
-The sound library exports an individual WAV or a selected sound-set ZIP with its provenance dependencies; the generator can write its result directly to a standalone WAV file. Selected bindings can be exported as a ZIP that imports as a new profile. The Profiles page can also export a complete profile or create a full configuration backup. Import checks the versioned manifest, hashes, and paths. Profile/binding-set archives merge as inactive profiles, while a sound-set ZIP merges into the library; ID conflicts are remapped and current settings/source states are preserved. A full backup replaces the YAML and restores with keyboard, mouse, GNOME, and API sources disabled. Missing output selectors can be mapped explicitly to an available output; profile imports use portable output defaults.
+The sound library exports an individual WAV or a selected sound-set ZIP with its provenance dependencies; the generator can write its result directly to a standalone WAV file. Selected bindings can be exported as a ZIP that imports as a new profile. The Profiles page can also export a complete profile or create a full configuration backup. Version 3 archives contain `config.json`; older YAML archives still import through migration. Import checks the versioned manifest, hashes, and paths. Profile/binding-set archives merge as inactive profiles, while a sound-set ZIP merges into the library; ID conflicts are remapped and current settings/source states are preserved. A full backup replaces the JSON config and restores with keyboard, mouse, GNOME, and API sources disabled. Missing output selectors can be mapped explicitly to an available output; profile imports use portable output defaults.
 
 Profiles can select their own Java Sound output and master volume; activating a profile changes those settings for event playback.
 
-The Events & bindings screen manages named custom events and named sound bindings independently. One event can launch several bindings; bindings can be edited, copied, enabled per profile, and deleted with a one-step undo. Binding priority and cooldown are validated in YAML and exposed alongside per-binding audio controls.
+The Events & bindings screen manages named custom events and named sound bindings independently. One event can launch several bindings; bindings can be edited, copied, enabled per profile, and deleted with a one-step undo. Binding priority and cooldown are validated in JSON and exposed alongside per-binding audio controls.
 
 Profiles can be assigned independently to keyboard, mouse/wheel, and system/API event sources. Each source follows the active profile unless an override is selected; per-voice output and master volume follow the chosen source profile.

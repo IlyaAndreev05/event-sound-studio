@@ -2,7 +2,6 @@ package io.github.ilyaandreev05.eventsoundstudio;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.ilyaandreev05.eventsoundstudio.api.LocalControlApi;
 import io.github.ilyaandreev05.eventsoundstudio.audio.AudioEngine;
 import io.github.ilyaandreev05.eventsoundstudio.audio.EventRouter;
@@ -27,14 +26,14 @@ public final class EventSoundStudioApp extends Application {
 
     public static void main(String[] args){
         if(args.length>0&&"--validate-config".equals(args[0])){validate(args.length>1?Path.of(args[1]):ConfigStore.defaultPath());System.exit(0);return;}
-        if(args.length>0&&"--export-default-config".equals(args[0])){exportDefault(args.length>1?Path.of(args[1]):Path.of("config.example.yaml"));System.exit(0);return;}
+        if(args.length>0&&"--export-default-config".equals(args[0])){exportDefault(args.length>1?Path.of(args[1]):Path.of("config.example.json"));System.exit(0);return;}
         if(args.length>0&&"--diagnose-audio".equals(args[0])){diagnoseAudio();System.exit(0);return;}
         if("root".equals(System.getProperty("user.name"))){System.err.println("Event Sound Studio refuses to run as root. Start it in the logged-in desktop session.");System.exit(2);}
         launch(args);
     }
-    private static void validate(Path path){try{ObjectMapper mapper=new ObjectMapper(new YAMLFactory());Map<String,Object> config=mapper.readValue(path.toFile(),new TypeReference<>(){});List<String> errors=ConfigValidator.validate(config);if(errors.isEmpty())System.out.println("Configuration is valid: "+path.toAbsolutePath());else{errors.forEach(e->System.err.println("- "+e));System.exit(1);}}catch(Exception e){System.err.println("Configuration could not be validated: "+e.getMessage());System.exit(1);}}
+    private static void validate(Path path){try{ObjectMapper mapper=path.getFileName().toString().endsWith(".yaml")||path.getFileName().toString().endsWith(".yml")?new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()):new ObjectMapper();Map<String,Object> config=mapper.readValue(path.toFile(),new TypeReference<>(){});List<String> errors=ConfigValidator.validate(config);if(errors.isEmpty())System.out.println("Configuration is valid: "+path.toAbsolutePath());else{errors.forEach(e->System.err.println("- "+e));System.exit(1);}}catch(Exception e){System.err.println("Configuration could not be validated: "+e.getMessage());System.exit(1);}}
     private static void diagnoseAudio(){System.out.println("Java Sound outputs (enumeration only; no output line opened and no audio played):");System.out.println("Default mixer: "+AudioEngine.defaultOutputName());System.out.println("Explicit mixers:");for(AudioEngine.OutputProbe output:AudioEngine.probeOutputs())System.out.println("- "+output.selector()+" | "+output.name()+" | "+output.vendor()+" | "+output.description()+" | "+output.version()+" | source line types="+output.sourceLineTypes()+" | 48 kHz/16-bit/stereo="+(output.supportsPcm48Stereo()?"supported":"not reported"));}
-    private static void exportDefault(Path path){try{new ObjectMapper(new YAMLFactory()).writeValue(path.toFile(),io.github.ilyaandreev05.eventsoundstudio.config.DefaultConfig.create());System.out.println("Wrote default configuration: "+path.toAbsolutePath());}catch(Exception e){System.err.println("Could not write default configuration: "+e.getMessage());System.exit(1);}}
+    private static void exportDefault(Path path){try{ObjectMapper mapper=path.getFileName().toString().endsWith(".yaml")||path.getFileName().toString().endsWith(".yml")?new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()):new ObjectMapper();mapper.writerWithDefaultPrettyPrinter().writeValue(path.toFile(),io.github.ilyaandreev05.eventsoundstudio.config.DefaultConfig.create());System.out.println("Wrote default configuration: "+path.toAbsolutePath());}catch(Exception e){System.err.println("Could not write default configuration: "+e.getMessage());System.exit(1);}}
     @Override public void start(Stage stage)throws Exception{
         store=new ConfigStore(ConfigStore.defaultPath());engine=new AudioEngine();library=new SoundLibrary(store);router=new EventRouter(engine,library);
         EvdevDeviceScanner scanner=new EvdevDeviceScanner();input=new EvdevInputService(scanner);dispatcher=new InputEventDispatcher(router);api=new LocalControlApi(router,ignored->{});theme=new ThemeManager();
