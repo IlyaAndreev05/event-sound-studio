@@ -9,8 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +28,24 @@ class InputEventDispatcherTest {
         RecordingSink sink=new RecordingSink();try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(DefaultConfig.create());dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,2));
             assertEquals(List.of("key:KEY_A:press","key:KEY_A:release"),sink.events);
+        }
+    }
+
+    @Test void aSingleWinKeyUsesTheModifierGroupOnRelease(){
+        RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_LEFTMETA:release");try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(DefaultConfig.create());dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,2));
+            assertEquals(List.of("group:builtin.modifiers"),sink.events);
+        }
+    }
+
+    @Test void winAOnlyComboDoesNotAlsoTriggerTheWinOrLetterGroups(){
+        RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();
+        @SuppressWarnings("unchecked") List<Map<String,Object>> combos=new ArrayList<>((List<Map<String,Object>>)config.get("combos"));
+        combos.add(DefaultConfig.map("id","win-a","keys",List.of("KEY_LEFTMETA","KEY_A"),"policy","ONLY_COMBO","event","win_a"));config.put("combos",combos);
+        try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
+            dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,4));
+            assertEquals(List.of("win_a"),sink.events);
         }
     }
 
@@ -128,6 +149,6 @@ class InputEventDispatcherTest {
         }
     }
     private static final class RecordingSink implements InputEventDispatcher.EventSink{
-        final List<String> events=new CopyOnWriteArrayList<>();public boolean hasEnabledBinding(String event){return true;}public boolean trigger(String event){events.add(event);return true;}
+        final List<String> events=new CopyOnWriteArrayList<>();final Set<String> disabled=new HashSet<>();public boolean hasEnabledBinding(String event){return !disabled.contains(event);}public boolean trigger(String event){events.add(event);return true;}
     }
 }
