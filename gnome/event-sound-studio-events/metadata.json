@@ -1,0 +1,7 @@
+{
+  "uuid": "event-sound-studio-events@ilyaandreev05",
+  "name": "Event Sound Studio Events",
+  "description": "Send generic workspace and window lifecycle events to Event Sound Studio over the session bus.",
+  "version": 1,
+  "shell-version": ["50"]
+}
