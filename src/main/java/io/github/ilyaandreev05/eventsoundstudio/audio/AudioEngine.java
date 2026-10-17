@@ -44,86 +44,17 @@ public final class AudioEngine implements AutoCloseable {
     public String status() { return status; }
     public long clippedSamples() { return clippedSamples.get(); }
     public long droppedRequests() { return droppedRequests.get(); }
-    public static List<String> availableOutputs() {
-        return availableOutputOptions().stream().map(OutputOption::selector).toList();
-    }
-    public static List<OutputOption> availableOutputOptions() { return selectableOutputOptions(probeOutputs(), PipeWireEventOutput.available()); }
+    public static List<String> availableOutputs() { return AudioOutputCatalog.availableOutputs(); }
+    public static List<OutputOption> availableOutputOptions() { return AudioOutputCatalog.availableOutputOptions(); }
     /** Physical outputs exposed only to explicit preview/generator actions. */
-    public static List<OutputOption> availablePreviewOutputOptions() { return selectableOutputOptions(probeOutputs(), false); }
-    static List<String> selectableOutputNames(List<OutputProbe> probes) {
-        List<String> result = new ArrayList<>(); result.add("system_default");
-        for (OutputProbe output : probes) if (output.supportsPcm48Stereo()) result.add(output.name());
-        return List.copyOf(result);
-    }
-    static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes) {
-        return selectableOutputOptions(probes, false);
-    }
-    static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes, boolean includeAudioMatrixEvents) {
-        List<OutputProbe> supported = probes.stream().filter(OutputProbe::supportsPcm48Stereo).toList();
-        Map<String, Integer> identityCounts = new HashMap<>();
-        for (OutputProbe output : supported) identityCounts.merge(identity(output), 1, Integer::sum);
-        List<OutputProbe> unique = new ArrayList<>();
-        Set<String> selectors = new LinkedHashSet<>();
-        for (OutputProbe output : supported) {
-            if (identityCounts.getOrDefault(identity(output), 0) == 1 && selectors.add(output.selector())) unique.add(output);
-        }
-        Map<String, Integer> nameCounts = new HashMap<>();
-        Map<String, Integer> labelCounts = new HashMap<>();
-        for (OutputProbe output : unique) nameCounts.merge(output.name(), 1, Integer::sum);
-        for (OutputProbe output : unique) labelCounts.merge(optionLabel(output, nameCounts), 1, Integer::sum);
-        List<OutputOption> result = new ArrayList<>();
-        result.add(new OutputOption("system_default", "system_default"));
-        for (OutputProbe output : unique) {
-            String label = optionLabel(output, nameCounts);
-            if (labelCounts.getOrDefault(label, 0) > 1) {
-                String hint = MixerOutputSelector.identityHint(output.selector());
-                if (!hint.isBlank()) label += " · " + hint;
-            }
-            result.add(new OutputOption(output.selector(), label));
-        }
-        if (includeAudioMatrixEvents)
-            result.add(new OutputOption(MixerOutputSelector.AUDIO_MATRIX_EVENTS, "Audio Matrix event input"));
-        return List.copyOf(result);
-    }
-    private static String identity(OutputProbe output) {
-        String key = MixerOutputSelector.canonicalKey(output.selector());
-        return key == null ? output.selector() : key;
-    }
-    private static String optionLabel(OutputProbe output, Map<String, Integer> nameCounts) {
-        String name = output.name().isBlank() ? MixerOutputSelector.displayName(output.selector()) : output.name();
-        if (nameCounts.getOrDefault(output.name(), 0) <= 1) return name;
-        String detail = java.util.stream.Stream.of(output.vendor(), output.description()).filter(value -> value != null && !value.isBlank())
-                .distinct().collect(java.util.stream.Collectors.joining(" · "));
-        return detail.isBlank() ? name : name + " — " + detail;
-    }
-    public static boolean outputAvailable(String selector, List<String> availableSelectors) {
-        return MixerOutputSelector.available(selector, availableSelectors);
-    }
-    public static String outputDisplayName(String selector, List<OutputOption> options) {
-        if (selector == null) return "";
-        if (MixerOutputSelector.AUDIO_MATRIX_EVENTS.equals(selector)) return "Audio Matrix event input";
-        List<OutputOption> matches = options.stream()
-                .filter(option -> MixerOutputSelector.equivalent(selector, option.selector())).toList();
-        if (matches.size() == 1) return matches.getFirst().displayName();
-        return MixerOutputSelector.displayName(selector);
-    }
-    public static List<OutputProbe> probeOutputs() {
-        List<OutputProbe> result = new ArrayList<>();
-        DataLine.Info requested = new DataLine.Info(SourceDataLine.class, new AudioFormat(SoundSynthesizer.SAMPLE_RATE,16,2,true,false));
-        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
-            try {
-                Mixer mixer=AudioSystem.getMixer(info);
-                int sourceLineTypes=mixer.getSourceLineInfo().length;
-                if (sourceLineTypes > 0) result.add(new OutputProbe(MixerOutputSelector.forMixer(info), info.getName(),
-                        info.getVendor(), info.getDescription(), info.getVersion(), sourceLineTypes, mixer.isLineSupported(requested)));
-            } catch (Exception ignored) { }
-        }
-        return List.copyOf(result);
-    }
-    public static String defaultOutputName() {
-        try { Mixer mixer=AudioSystem.getMixer(null); return mixer==null?"unavailable":mixer.getMixerInfo().getName(); }
-        catch (Exception ignored) { return "unavailable"; }
-    }
+    public static List<OutputOption> availablePreviewOutputOptions() { return AudioOutputCatalog.availablePreviewOutputOptions(); }
+    static List<String> selectableOutputNames(List<OutputProbe> probes) { return AudioOutputCatalog.selectableOutputNames(probes); }
+    static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes) { return AudioOutputCatalog.selectableOutputOptions(probes); }
+    static List<OutputOption> selectableOutputOptions(List<OutputProbe> probes, boolean includeEvents) { return AudioOutputCatalog.selectableOutputOptions(probes, includeEvents); }
+    public static boolean outputAvailable(String selector, List<String> availableSelectors) { return AudioOutputCatalog.outputAvailable(selector, availableSelectors); }
+    public static String outputDisplayName(String selector, List<OutputOption> options) { return AudioOutputCatalog.outputDisplayName(selector, options); }
+    public static List<OutputProbe> probeOutputs() { return AudioOutputCatalog.probeOutputs(); }
+    public static String defaultOutputName() { return AudioOutputCatalog.defaultOutputName(); }
     public void updateSettings(double volume, boolean mute, boolean limiter, String output) {
         settings.set(new RenderSettings(clamp(volume,0,1),mute,limiter,output == null ? "system_default" : output));
     }

@@ -24,6 +24,11 @@ application {
 }
 test { useJUnitPlatform() }
 
+tasks.register('verifyClassSize', Exec) {
+    commandLine 'python3', 'scripts/check_class_size.py'
+}
+tasks.named('test') { dependsOn tasks.named('verifyClassSize') }
+
 tasks.register('packageDeb', Exec) {
     dependsOn tasks.installDist
     doFirst {
