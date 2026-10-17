@@ -134,13 +134,18 @@ public final class InputEventDispatcher implements AutoCloseable {
         String policy=mouseClickPolicy();
         if(previous>0&&now-previous<=window){
             state.lastLeftRelease=0;ScheduledFuture<?> pending=state.pendingClicks.remove(button);if(pending!=null)pending.cancel(false);
-            fire(state,"mouse_double_left");
+            boolean immediateSingleFeedback="immediate_plus_double".equals(policy)&&hasSingleLeftClickBinding();
+            if(!immediateSingleFeedback)fire(state,"mouse_double_left");
         }else{
             state.lastLeftRelease=now;
             if("wait_and_suppress".equals(policy)){
                 state.pendingClicks.put(button,timers.schedule(()->{if(System.nanoTime()-state.lastLeftRelease>=window){fire(state,"mouse_left");state.pendingClicks.remove(button);}},window,TimeUnit.NANOSECONDS));
             }
         }
+    }
+    private boolean hasSingleLeftClickBinding(){
+        return router.hasEnabledBinding("mouse_left")||router.hasEnabledBinding("button:BTN_LEFT:press")
+                ||router.hasEnabledBinding("button:BTN_LEFT:release");
     }
     private void wheel(DeviceState state,int code,int value){
         if(value==0)return;

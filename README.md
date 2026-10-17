@@ -1,6 +1,6 @@
 # Event Sound Studio
 
-A local desktop sound library and event-to-effect player, released as version 0.2.0. Settings live in `~/.config/event-sound-studio/config.json`; first launch migrates `config.yaml` and preserves it as `config.yaml.before-json`. Event audio targets the isolated `audio_matrix_events` PipeWire sink and stays silent if that target is unavailable; previews and the generator use a separate `preview_output`. The current default document is `src/main/resources/config.example.json`; `config.example.yaml` remains a migration example. Built-in and imported WAV files remain separate assets.
+A local desktop sound library and event-to-effect player, released as version 0.2.1. Settings live in `~/.config/event-sound-studio/config.json`; first launch migrates `config.yaml` and preserves it as `config.yaml.before-json`. Event audio targets the isolated `audio_matrix_events` PipeWire sink and stays silent if that target is unavailable; previews and the generator use a separate `preview_output`. The default click mode emits an immediate effect for every physical click and does not add a second double-click effect on top. Left and right Super keys have separate defaults. The current default document is `src/main/resources/config.example.json`; `config.example.yaml` remains a migration example. Built-in and imported WAV files remain separate assets.
 
 ## Run
 

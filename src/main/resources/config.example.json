@@ -17,7 +17,7 @@
     "overlap_policy" : "mix_with_limiter",
     "default_cooldown_ms" : 20,
     "mouse_click_policy" : {
-      "mode" : "wait_and_suppress",
+      "mode" : "immediate_plus_double",
       "double_click_window_ms" : 250
     },
     "keyboard_repeat" : {
@@ -751,6 +751,24 @@
     "duration_ms" : 220,
     "remove_dc" : false
   }, {
+    "id" : "super-right-key-press",
+    "event" : "key:KEY_RIGHTMETA:press",
+    "sound" : "soft-pop",
+    "enabled" : true,
+    "priority" : 60,
+    "volume" : 0.35,
+    "cooldown_ms" : 120,
+    "overlap" : "ignore",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 220,
+    "remove_dc" : false
+  }, {
     "id" : "window-focus",
     "event" : "window_focus_changed",
     "sound" : "subtle-confirm",
@@ -832,7 +850,7 @@
   "profiles" : [ {
     "id" : "desk",
     "name" : "Рабочий стол",
-    "enabled_bindings" : [ "all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "custom-test-api" ],
+    "enabled_bindings" : [ "all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api" ],
     "output" : "audio_matrix_events",
     "master_volume" : 0.65
   }, {
