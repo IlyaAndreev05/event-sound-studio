@@ -52,6 +52,16 @@ class InputEventDispatcherTest {
         }
     }
 
+    @Test void rightWinKeyHasItsOwnDefaultEffect(){
+        RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_RIGHTMETA:release");Map<String,Object> config=DefaultConfig.create();
+        @SuppressWarnings("unchecked") List<Map<String,Object>> bindings=(List<Map<String,Object>>)config.get("bindings");
+        assertTrue(bindings.stream().anyMatch(binding->"super-right-key-press".equals(binding.get("id"))&&"key:KEY_RIGHTMETA:press".equals(binding.get("event"))));
+        try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,126,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,126,0,2));
+            assertEquals(List.of("key:KEY_RIGHTMETA:press"),sink.events);
+        }
+    }
+
     @Test void winAOnlyComboDoesNotAlsoTriggerTheWinOrLetterGroups(){
         RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_LEFTMETA:press");Map<String,Object> config=configWithCombo("win-a",List.of("KEY_LEFTMETA","KEY_A"),"ONLY_COMBO","win_a");
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
@@ -141,15 +151,15 @@ class InputEventDispatcherTest {
         }
     }
 
-    @Test void immediateDoubleClickPolicyAddsDoubleEventAfterTwoClicks(){
+    @Test void immediateDoubleClickPolicyDoesNotStackDoubleEffectOverTwoClickEffects(){
         RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();@SuppressWarnings("unchecked") Map<String,Object> settings=(Map<String,Object>)config.get("settings");settings.put("mouse_click_policy",DefaultConfig.map("mode","immediate_plus_double","double_click_window_ms",250));try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(config);for(int i=0;i<2;i++){dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,1,i*2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,0,i*2+1));}
-            assertEquals(List.of("button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release","button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release","mouse_double_left"),sink.events);
+            assertEquals(List.of("button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release","button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release"),sink.events);
         }
     }
 
-    @Test void defaultDoubleClickPolicyDoesNotEmitTwoSingleClickEffects(){
-        RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();assertEquals("wait_and_suppress",((Map<?,?>)config.get("settings")).get("mouse_click_policy") instanceof Map<?,?> policy?policy.get("mode"):null);
+    @Test void immediatePolicyCanEmitDedicatedDoubleWhenNoSingleClickFeedbackIsBound(){
+        RecordingSink sink=new RecordingSink();sink.disabled.addAll(List.of("mouse_left","button:BTN_LEFT:press","button:BTN_LEFT:release"));Map<String,Object> config=DefaultConfig.create();
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(config);for(int i=0;i<2;i++){dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,1,i*2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,0,i*2+1));}
             assertEquals(1,sink.events.stream().filter("mouse_double_left"::equals).count());assertEquals(0,sink.events.stream().filter("mouse_left"::equals).count());
