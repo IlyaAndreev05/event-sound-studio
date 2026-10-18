@@ -51,9 +51,13 @@ public final class DefaultConfig {
                 "members", List.of("KEY_W", "KEY_A", "KEY_S", "KEY_D"), "default_sound", "key-tap"));
         root.put("groups", groups);
         List<Map<String, Object>> bindings = new ArrayList<>();
-        bindings.add(binding("letters-default", "group:builtin.letters", "octine-keypress", true, 10, 1.0, 0, "mix"));
-        bindings.add(binding("digits-default", "group:builtin.digits", "octine-keypress", true, 10, 1.0, 0, "mix"));
-        bindings.add(binding("enter-key", "enter_press", "octine-enter", true, 30, 1.0, 0, "mix"));
+        bindings.add(binding("letters-default", "group:builtin.letters", "octine-click", true, 10, 0.07, 0, "mix"));
+        bindings.add(binding("digits-default", "group:builtin.digits", "octine-click", true, 10, 0.07, 0, "mix"));
+        bindings.add(binding("all-key-press", "key_press", "octine-click", true, 5, 0.07, 0, "mix"));
+        bindings.add(binding("navigation-default", "group:builtin.navigation", "octine-click", true, 10, 0.07, 0, "mix"));
+        bindings.add(binding("numpad-default", "group:builtin.numpad", "octine-click", true, 10, 0.07, 0, "mix"));
+        bindings.add(binding("modifiers-default", "group:builtin.modifiers", "octine-click", true, 30, 0.15, 0, "mix"));
+        bindings.add(binding("enter-key", "enter_press", "octine-click", true, 30, 0.07, 0, "mix"));
         bindings.add(binding("mouse-click", "mouse_left", "octine-click", true, 20, 1.0, 15, "mix"));
         bindings.add(binding("mouse-right-click", "button:BTN_RIGHT:press", "octine-right-click", true, 20, 1.0, 15, "mix"));
         bindings.add(binding("mouse-middle-click", "button:BTN_MIDDLE:press", "octine-click", true, 20, 1.0, 15, "mix"));
@@ -64,13 +68,13 @@ public final class DefaultConfig {
         bindings.add(binding("wheel-right", "wheel_right", "octine-scroll", true, 20, 1.0, 10, "restart"));
         bindings.add(binding("save-combo", "combo_save", "notification-two", true, 100, 0.4, 100, "ignore"));
         bindings.add(binding("workspace-change", "desktop_changed", "octine-reminder", true, 50, 1.0, 250, "ignore"));
-        bindings.add(binding("super-key-press", "key:KEY_LEFTMETA:press", "octine-system", true, 60, 1.0, 120, "ignore"));
-        bindings.add(binding("super-right-key-press", "key:KEY_RIGHTMETA:press", "octine-system", true, 60, 1.0, 120, "ignore"));
-        bindings.stream().filter(binding -> List.of("letters-default","digits-default").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 45));
-        bindings.stream().filter(binding -> List.of("enter-key","mouse-click","mouse-right-click","mouse-middle-click").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 60));
+        bindings.add(binding("super-key-press", "key:KEY_LEFTMETA:press", "octine-click", true, 60, 0.15, 0, "mix"));
+        bindings.add(binding("super-right-key-press", "key:KEY_RIGHTMETA:press", "octine-click", true, 60, 0.15, 0, "mix"));
+        bindings.stream().filter(binding -> List.of("letters-default","digits-default","all-key-press","navigation-default","numpad-default","enter-key").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 60));
+        bindings.stream().filter(binding -> List.of("modifiers-default","super-key-press","super-right-key-press").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 60));
+        bindings.stream().filter(binding -> List.of("mouse-click","mouse-right-click","mouse-middle-click").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 60));
         bindings.stream().filter(binding -> String.valueOf(binding.get("id")).startsWith("wheel-")).forEach(binding -> binding.put("duration_ms", 28));
         bindings.stream().filter(binding -> "workspace-change".equals(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 450));
-        bindings.stream().filter(binding -> List.of("super-key-press","super-right-key-press").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 220));
         bindings.add(binding("window-focus", "window_focus_changed", "subtle-confirm", true, 40, 0.25, 180, "ignore"));
         bindings.add(binding("window-open", "window_opened", "subtle-confirm", false, 35, 0.2, 200, "ignore"));
         bindings.add(binding("window-close", "window_closed", "subtle-cancel", false, 35, 0.2, 200, "ignore"));
@@ -78,7 +82,7 @@ public final class DefaultConfig {
         root.put("bindings", bindings);
         root.put("combos", List.of(map("id", "save", "keys", List.of("KEY_LEFTCTRL", "KEY_S"), "policy", "ONLY_COMBO", "event", "combo_save")));
         root.put("profiles", List.of(
-                map("id", "desk", "name", "Рабочий стол", "enabled_bindings", List.of("letters-default", "digits-default", "enter-key", "mouse-click", "mouse-right-click", "mouse-middle-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api"), "output", io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS, "master_volume", 1.0),
+                map("id", "desk", "name", "Рабочий стол", "enabled_bindings", List.of("letters-default", "digits-default", "all-key-press", "navigation-default", "numpad-default", "modifiers-default", "enter-key", "mouse-click", "mouse-right-click", "mouse-middle-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api"), "output", io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS, "master_volume", 1.0),
                 map("id", "quiet", "name", "Тихий режим", "enabled_bindings", List.of("custom-test-api"), "output", io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS, "master_volume", 0.25)));
         root.put("api", map("enabled", false));
         DefaultEventPresets.apply(root);
@@ -148,11 +152,7 @@ public final class DefaultConfig {
                 "duration_ms", 0, "remove_dc", false);
     }
     private static String defaultSound(String group) {
-        return switch (group) {
-            case "builtin.function", "builtin.modifiers", "builtin.mouse" -> "octine-click";
-            case "builtin.navigation" -> "octine-keypress";
-            default -> "octine-keypress";
-        };
+        return "octine-click";
     }
     private static Map<String, List<String>> groups() {
         Map<String, List<String>> g = new LinkedHashMap<>();

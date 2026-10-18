@@ -71,9 +71,9 @@ class WheelPacketTest {
     @Test void slowModifierDoesNotLeakBeforeOnlyComboAndReconnectClearsChord(){
         Sink sink=new Sink();try(var d=new InputEventDispatcher(sink)){
             Map<String,Object> config=DefaultConfig.create();config.put("combos",List.of(Map.of("id","test","keys",List.of("KEY_LEFTMETA","KEY_A"),"policy","ONLY_COMBO","event","combo")));d.updateConfig(config);
-            event(d,"kbd",1,125,1);assertTrue(sink.events.isEmpty());
+            event(d,"kbd",1,125,1);assertEquals(List.of("key:KEY_LEFTMETA:press"),sink.events);
             event(d,"kbd",1,30,1);event(d,"kbd",1,30,0);event(d,"kbd",1,125,0);
-            assertEquals(List.of("combo"),sink.events);
+            assertEquals(List.of("key:KEY_LEFTMETA:press","combo"),sink.events);
             event(d,"kbd",1,125,1);event(d,"kbd",-1,0,0);event(d,"kbd",1,30,1);event(d,"kbd",1,30,0);
             assertEquals(1,sink.events.stream().filter("combo"::equals).count());
         }

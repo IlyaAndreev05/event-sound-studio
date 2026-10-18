@@ -48,7 +48,7 @@ public final class InputEventDispatcher implements AutoCloseable {
     public InputDiagnostics.Snapshot snapshot(){return diagnostics.snapshot();}
     public void beginCalibration(String deviceId,int physicalDetents){reset(deviceId);diagnostics.beginCalibration(deviceId,physicalDetents);}
     public InputDiagnostics.Calibration endCalibration(){return diagnostics.endCalibration();}
-    public void reset(String deviceId){wheels.reset(deviceId);dropped.remove(deviceId);DeviceState state=devices.remove(deviceId);if(state!=null)synchronized(state){state.pressed.clear();state.pendingClicks.values().forEach(f->f.cancel(false));state.pendingClicks.clear();state.pendingModifiers.clear();}}
+    public void reset(String deviceId){wheels.reset(deviceId);dropped.remove(deviceId);DeviceState state=devices.remove(deviceId);if(state!=null)synchronized(state){state.pressed.clear();state.pendingClicks.values().forEach(f->f.cancel(false));state.pendingClicks.clear();}}
     int pressedKeyCount(String deviceId){DeviceState state=devices.get(deviceId);if(state==null)return 0;synchronized(state){return state.pressed.size();}}
     public boolean altTabPressedWithin(long windowMs){long last=lastAltTabNanos.get();if(last==Long.MIN_VALUE)return false;long elapsed=System.nanoTime()-last;return elapsed>=0&&elapsed<=TimeUnit.MILLISECONDS.toNanos(windowMs);}
     private void key(DeviceState state,int code,int value){
@@ -65,33 +65,23 @@ public final class InputEventDispatcher implements AutoCloseable {
             state.lastRepeatNanos.put(key,now);
             Map<String,Object> combo=matchingCombo(state.pressed,state);
             if(combo!=null){String policy=String.valueOf(combo.getOrDefault("policy","ONLY_COMBO"));
-                if("COMBO_AND_KEYS".equals(policy)){
-                    for(String comboKey:stringList(combo.get("keys"))){
-                        if(state.pendingModifiers.remove(comboKey))triggerKey(comboKey,"press",state.preview);
-                    }
-                }
                 state.firedCombos.add(comboIdentity(combo));String event=String.valueOf(combo.getOrDefault("event",combo.get("id")));fire(state,event);
-                if("ONLY_COMBO".equals(policy)||"SUPPRESS_MODIFIERS".equals(policy)){
-                    state.pendingModifiers.removeAll(stringList(combo.get("keys")));
-                }
                 if("ONLY_COMBO".equals(policy)){
                     for(String comboKey:stringList(combo.get("keys")))state.consumed.add(comboKey);
+                    if(isModifier(key))triggerKey(key,"press",state.preview);
                     return;
                 }
                 if("SUPPRESS_MODIFIERS".equals(policy)){
                     for(String comboKey:stringList(combo.get("keys")))if(isModifier(comboKey))state.consumed.add(comboKey);
-                    if(isModifier(key))return;
+                    if(isModifier(key)){triggerKey(key,"press",state.preview);return;}
                 }
             }
             if(state.consumed.contains(key))return;
-            if(awaitsModifierSuppression(key)){
-                state.pendingModifiers.add(key);
-            }else triggerKey(key,"press",state.preview);
+            triggerKey(key,"press",state.preview);
         }else{
             state.pressed.remove(key);
             state.lastRepeatNanos.remove(key);
             state.firedCombos.removeIf(identity->!comboStillHeld(identity,state.pressed));
-            if(state.pendingModifiers.remove(key)&&!state.consumed.contains(key))triggerKey(key,"press",state.preview);
             if(state.consumed.remove(key))return;
             triggerKey(key,"release",state.preview);
         }
@@ -117,16 +107,13 @@ public final class InputEventDispatcher implements AutoCloseable {
             String press="key:"+key+":press";
             if(router.hasEnabledBinding(press)){fire(preview,press);return;}
             if(key.equals("KEY_ENTER")&&router.hasEnabledBinding("enter_press")){fire(preview,"enter_press");return;}
-            String group=groupFor(key);if(group!=null)fire(preview,"group:"+group);
+            String group=groupFor(key);fire(preview,group==null?"key_press":"group:"+group);
             return;
         }
         String special=switch(key){case "KEY_ENTER"->"enter_press";case "KEY_BACKSPACE"->"backspace_press";case "KEY_DELETE"->"delete_press";default->"";};
         if(!special.isEmpty()&&router.hasEnabledBinding(special)){fire(preview,special);return;}
         String group=groupFor(key);
-        if("press".equals(state)){
-            if(group!=null&&router.hasEnabledBinding("group:"+group)){fire(preview,"group:"+group);return;}
-            if(key.matches("KEY_[A-Z0-9]")||Set.of("KEY_MINUS","KEY_EQUAL","KEY_LEFTBRACE","KEY_RIGHTBRACE","KEY_BACKSLASH","KEY_SEMICOLON","KEY_APOSTROPHE","KEY_GRAVE","KEY_COMMA","KEY_DOT","KEY_SLASH","KEY_102ND").contains(key))fire(preview,"key_press");
-        }
+        if("press".equals(state))fire(preview,group==null?"key_press":"group:"+group);
     }
     private void mouseButton(DeviceState state,String button,boolean down){
         if(down?!state.pressed.add(button):!state.pressed.remove(button))return;
@@ -170,13 +157,12 @@ public final class InputEventDispatcher implements AutoCloseable {
     private String groupFor(String key){
         if(config.get("groups") instanceof List<?> groups){
             for(String preferred:List.of("custom.function","custom.technical","custom.punctuation"))
-                for(Object item:groups){Map<String,Object> group=map(item);if(preferred.equals(String.valueOf(group.get("id")))&&stringList(group.get("members")).contains(key))return preferred;}
-            for(boolean custom:new boolean[]{false,true})for(Object item:groups){Map<String,Object> group=map(item);String id=String.valueOf(group.get("id"));if(id.startsWith("builtin.")!=custom&&stringList(group.get("members")).contains(key))return id;}
+                for(Object item:groups){Map<String,Object> group=map(item);if(preferred.equals(String.valueOf(group.get("id")))&&stringList(group.get("members")).contains(key)&&router.hasEnabledBinding("group:"+preferred))return preferred;}
+            for(boolean custom:new boolean[]{false,true})for(Object item:groups){Map<String,Object> group=map(item);String id=String.valueOf(group.get("id"));if(id.startsWith("builtin.")!=custom&&stringList(group.get("members")).contains(key)&&router.hasEnabledBinding("group:"+id))return id;}
         }
         return null;
     }
     private boolean isModifier(String key){return key.contains("CTRL")||key.contains("SHIFT")||key.contains("ALT")||key.contains("META");}
-    private boolean awaitsModifierSuppression(String key){return combos.stream().anyMatch(combo->stringList(combo.get("keys")).contains(key)&&("ONLY_COMBO".equals(String.valueOf(combo.getOrDefault("policy","ONLY_COMBO")))||(isModifier(key)&&"SUPPRESS_MODIFIERS".equals(combo.get("policy")))));}
     private static boolean isAlt(String key){return "KEY_LEFTALT".equals(key)||"KEY_RIGHTALT".equals(key);}
     private static boolean hasAlt(Set<String> keys){return keys.contains("KEY_LEFTALT")||keys.contains("KEY_RIGHTALT");}
     private long mouseDoubleWindowNanos(){return (long)(num(map(map(config.get("settings")).get("mouse_click_policy")).get("double_click_window_ms"),250)*1_000_000);}
@@ -199,5 +185,5 @@ public final class InputEventDispatcher implements AutoCloseable {
             Map.entry(82,"KEY_KP0"),Map.entry(79,"KEY_KP1"),Map.entry(80,"KEY_KP2"),Map.entry(81,"KEY_KP3"),Map.entry(75,"KEY_KP4"),Map.entry(76,"KEY_KP5"),Map.entry(77,"KEY_KP6"),Map.entry(71,"KEY_KP7"),Map.entry(72,"KEY_KP8"),Map.entry(73,"KEY_KP9"),Map.entry(83,"KEY_KPDOT"),Map.entry(96,"KEY_KPENTER"),Map.entry(78,"KEY_KPPLUS"),Map.entry(74,"KEY_KPMINUS"),Map.entry(55,"KEY_KPASTERISK"),Map.entry(98,"KEY_KPSLASH"));
     private static final Map<Integer,String> BUTTONS=Map.of(272,"BTN_LEFT",273,"BTN_RIGHT",274,"BTN_MIDDLE",275,"BTN_SIDE",276,"BTN_EXTRA");
     interface EventSink{boolean hasEnabledBinding(String event);boolean trigger(String event);default boolean preview(String event){return trigger(event);}}
-    private static final class DeviceState{final boolean preview;DeviceState(boolean preview){this.preview=preview;}final Set<String>pressed=new HashSet<>(),consumed=new HashSet<>(),firedCombos=new HashSet<>(),pendingModifiers=new HashSet<>();final Map<String,Long>lastRepeatNanos=new HashMap<>();final Map<String,ScheduledFuture<?>>pendingClicks=new HashMap<>();long lastLeftRelease;}
+    private static final class DeviceState{final boolean preview;DeviceState(boolean preview){this.preview=preview;}final Set<String>pressed=new HashSet<>(),consumed=new HashSet<>(),firedCombos=new HashSet<>();final Map<String,Long>lastRepeatNanos=new HashMap<>();final Map<String,ScheduledFuture<?>>pendingClicks=new HashMap<>();long lastLeftRelease;}
 }

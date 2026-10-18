@@ -27,7 +27,7 @@ final class PipeWireEventOutput {
         String properties = "{\"application.id\":\"" + APPLICATION_ID
                 + "\",\"application.name\":\"Event Sound Studio\",\"media.name\":\"Event effects\","
                 + "\"node.name\":\"eventsoundstudio_pcm\",\"target.object\":\"" + NODE_NAME + "\",\"node.dont-fallback\":true,\"node.dont-reconnect\":true}";
-        return List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME, "--volume=1", "--latency=512",
+        return List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME, "--volume=1", "--latency=256",
                 "--rate", "48000", "--channels", "2", "--channel-map", "FL,FR",
                 "--format", "s16", "--properties=" + properties, "-");
     }
@@ -44,17 +44,17 @@ final class PipeWireEventOutput {
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.DISCARD)
                 .start();
+        LinuxPipeBudget.shrink(process);
         OutputStream input = process.getOutputStream();
         try {
             input.write(new byte[1024]); input.flush();
-            boolean linked = false;
-            for (int attempt = 0; attempt < 8 && process.isAlive(); attempt++) {
-                if (PipeWireEventTarget.linked(sink)) { linked = true; break; }
-                Thread.sleep(100);
+            int stream = -1;
+            for (int attempt = 0; attempt < 8 && process.isAlive() && stream < 0; attempt++) {
+                stream = PipeWireEventTarget.linkedStream(sink);
+                if (stream < 0) Thread.sleep(100);
             }
-            if (!linked) throw new IOException("Explicit audiomatrix_events target is not linked; event output remains silent");
-            try { PipeWireEventTarget.normalizeLevel(); }
-            catch (Exception levelError) { /* keep the persistent stream; its last saved gain may still apply */ }
+            if (stream < 0) throw new IOException("Explicit audiomatrix_events target is not linked; event output remains silent");
+            PipeWireEventTarget.normalizeLevelAsync(stream, process::isAlive);
         } catch (Exception error) { close(process, input); throw new IOException(error.getMessage(), error); }
         long[] written = {0};
         return (SourceDataLine) Proxy.newProxyInstance(SourceDataLine.class.getClassLoader(),
