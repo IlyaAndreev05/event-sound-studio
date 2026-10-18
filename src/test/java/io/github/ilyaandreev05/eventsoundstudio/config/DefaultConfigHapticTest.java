@@ -26,12 +26,12 @@ class DefaultConfigHapticTest {
         }
         for(String id:List.of("modifiers-default","function-keys","super-key-press","super-right-key-press")){
             assertEquals("octine-click",bindings.get(id).get("sound"),id);
-            assertEquals(0.105,bindings.get(id).get("volume"),id);
+            assertEquals(0.0687,bindings.get(id).get("volume"),id);
             assertEquals(60,bindings.get(id).get("duration_ms"),id);
         }
         assertEquals(true,bindings.get("all-key-press").get("enabled"));
         assertEquals("octine-click",bindings.get("mouse-click").get("sound"));
-        assertEquals(0.7,bindings.get("mouse-click").get("volume"));
+        assertEquals(0.0687,bindings.get("mouse-click").get("volume"));
         assertEquals(60,bindings.get("mouse-click").get("duration_ms"));
         assertEquals("octine-right-click",bindings.get("mouse-right-click").get("sound"));
         assertEquals("octine-scroll",bindings.get("wheel-up").get("sound"));
