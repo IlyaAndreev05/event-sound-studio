@@ -18,9 +18,9 @@ final class DefaultEventPresets {
     static List<Map<String,Object>> groups() {
         List<String> function = new ArrayList<>();
         for (int i = 1; i <= 24; i++) function.add("KEY_F" + i);
-        return List.of(group("custom.function", "F1–F24", function, "octine-function"),
+        return List.of(group("custom.function", "F1–F24", function, "octine-click"),
                 group("custom.technical", "Технические клавиши", TECHNICAL, "octine-technical"),
-                group("custom.punctuation", "Пунктуация и пробел", PUNCTUATION, "octine-keypress"));
+                group("custom.punctuation", "Пунктуация и пробел", PUNCTUATION, "octine-click"));
     }
 
     private static Map<String,Object> group(String id, String name, List<String> members, String sound) {
@@ -39,20 +39,21 @@ final class DefaultEventPresets {
             switch (String.valueOf(binding.get("id"))) {
                 case "mouse-middle-click" -> setSound(binding, "octine-middle-click", 48);
                 case "workspace-change" -> setSound(binding, "octine-workspace", 120);
-                case "super-key-press", "super-right-key-press" -> setSound(binding, "octine-super", 65);
+                case "super-key-press", "super-right-key-press" -> setSound(binding, "octine-click", 60);
                 default -> { }
             }
         }
-        bindings.add(shortBinding("punctuation-default", "group:custom.punctuation", "octine-keypress", true, 45));
-        bindings.add(shortBinding("function-keys", "group:custom.function", "octine-function", true, 38));
-        bindings.add(shortBinding("technical-keys", "group:custom.technical", "octine-technical", false, 28));
-        bindings.add(shortBinding("backspace-key", "backspace_press", "octine-backspace", true, 42));
-        bindings.add(shortBinding("delete-key", "delete_press", "octine-delete", true, 48));
-        bindings.add(shortBinding("notification-tap", "notification_visible", "octine-notification", true, 85));
+        bindings.add(shortBinding("punctuation-default", "group:custom.punctuation", "octine-click", true, 0.07, 60));
+        bindings.add(shortBinding("function-keys", "group:custom.function", "octine-click", true, 0.15, 60));
+        bindings.add(shortBinding("technical-keys", "group:custom.technical", "octine-technical", false, 1.0, 28));
+        bindings.add(shortBinding("backspace-key", "backspace_press", "octine-click", true, 0.07, 60));
+        bindings.add(shortBinding("delete-key", "delete_press", "octine-click", true, 0.07, 60));
+        bindings.add(shortBinding("notification-tap", "notification_visible", "octine-notification", true, 1.0, 85));
         for (Map<String,Object> profile : maps(root.get("profiles"))) {
             List<Object> enabled = new ArrayList<>((List<?>) profile.get("enabled_bindings"));
-            enabled.remove("all-key-press");
-            if ("desk".equals(profile.get("id"))) enabled.addAll(List.of("punctuation-default", "function-keys", "backspace-key", "delete-key", "notification-tap"));
+            if ("desk".equals(profile.get("id"))) {
+                for (String id : List.of("punctuation-default", "function-keys", "backspace-key", "delete-key", "notification-tap")) if (!enabled.contains(id)) enabled.add(id);
+            }
             profile.put("enabled_bindings", enabled);
         }
     }
@@ -61,8 +62,8 @@ final class DefaultEventPresets {
         binding.put("sound", sound); binding.put("duration_ms", duration);
     }
 
-    private static Map<String,Object> shortBinding(String id, String event, String sound, boolean enabled, int duration) {
-        Map<String,Object> binding = DefaultConfig.binding(id, event, sound, enabled, 30, 1.0, 0, "mix");
+    private static Map<String,Object> shortBinding(String id, String event, String sound, boolean enabled, double volume, int duration) {
+        Map<String,Object> binding = DefaultConfig.binding(id, event, sound, enabled, 30, volume, 0, "mix");
         binding.put("duration_ms", duration);
         return binding;
     }

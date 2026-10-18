@@ -51,6 +51,7 @@ class AudioEngineOutputTest {
         int targetIndex = command.indexOf("--target");
         assertTrue(targetIndex >= 0);
         assertEquals(PipeWireEventOutput.NODE_NAME, command.get(targetIndex + 1));
+        assertTrue(command.contains("--latency=256"));
         String properties = command.stream().filter(argument -> argument.startsWith("--properties="))
                 .findFirst().orElseThrow();
         assertTrue(properties.contains("\"target.object\":\"audiomatrix_events\""));

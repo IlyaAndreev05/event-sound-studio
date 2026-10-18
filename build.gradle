@@ -22,7 +22,7 @@ application {
     mainClass = 'io.github.ilyaandreev05.eventsoundstudio.EventSoundStudioLauncher'
     applicationDefaultJvmArgs = ['--enable-native-access=javafx.graphics,ALL-UNNAMED', '--add-modules=jdk.httpserver']
 }
-test { useJUnitPlatform() }
+test { useJUnitPlatform(); jvmArgs '--enable-native-access=ALL-UNNAMED' }
 
 tasks.register('verifyClassSize', Exec) {
     commandLine 'python3', 'scripts/check_class_size.py'

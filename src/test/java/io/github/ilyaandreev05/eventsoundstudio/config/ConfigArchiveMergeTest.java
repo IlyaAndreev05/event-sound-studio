@@ -88,7 +88,7 @@ class ConfigArchiveMergeTest extends ConfigArchiveTestSupport {
             Map<String, Object> importedGroup = maps(merged.get("groups")).stream()
                     .filter(group -> "import-custom.game".equals(group.get("id"))).findFirst().orElseThrow();
             assertEquals("import-key-tap", importedGroup.get("default_sound"));
-            assertEquals("octine-keypress", maps(merged.get("groups")).stream().filter(group -> "builtin.letters".equals(group.get("id"))).findFirst().orElseThrow().get("default_sound"));
+            assertEquals("octine-click", maps(merged.get("groups")).stream().filter(group -> "builtin.letters".equals(group.get("id"))).findFirst().orElseThrow().get("default_sound"));
             assertFalse(maps(merged.get("sounds")).stream().anyMatch(sound -> "import-soft-click".equals(sound.get("id"))));
             Map<String, Object> importedSound = maps(merged.get("sounds")).stream()
                     .filter(sound -> "import-profile-only".equals(sound.get("id"))).findFirst().orElseThrow();

@@ -67,7 +67,7 @@ class InputEventDispatcherTest {
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,125,0,4));
-            assertEquals(List.of("win_a"),sink.events);
+            assertEquals(List.of("group:builtin.modifiers","win_a"),sink.events);
         }
     }
 
@@ -87,7 +87,7 @@ class InputEventDispatcherTest {
             dispatcher.updateConfig(configWithCombo("ctrl-a",List.of("KEY_LEFTCTRL","KEY_A"),"SUPPRESS_MODIFIERS","ctrl_a"));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,0,4));
-            assertEquals(List.of("ctrl_a","group:builtin.letters"),sink.events);
+            assertEquals(List.of("group:custom.technical","ctrl_a","group:builtin.letters"),sink.events);
         }
     }
 

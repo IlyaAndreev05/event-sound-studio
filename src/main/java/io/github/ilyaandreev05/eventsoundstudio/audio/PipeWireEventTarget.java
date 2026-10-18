@@ -19,36 +19,33 @@ final class PipeWireEventTarget {
         if (matches != 1 || id < 0) throw new IOException("Explicit audiomatrix_events target is absent or ambiguous; no hardware fallback");
         return id;
     }
-    static boolean linked(int sink) throws Exception {
+    static int linkedStream(int sink) throws Exception {
         JsonNode graph = snapshot(); int stream = -1;
         for (JsonNode object : graph) {
             JsonNode props = object.path("info").path("props");
             if ("eventsoundstudio_pcm".equals(props.path("node.name").asText())
                     && PipeWireEventOutput.APPLICATION_ID.equals(props.path("application.id").asText())) stream = object.path("id").asInt(-1);
         }
-        if (stream < 0) return false;
+        if (stream < 0) return -1;
         for (JsonNode object : graph) {
             JsonNode info = object.path("info");
             if (info.path("output-node-id").asInt(-2) == stream && info.path("input-node-id").asInt(-2) == sink
-                    && ("active".equals(info.path("state").asText()) || "paused".equals(info.path("state").asText()))) return true;
+                    && ("active".equals(info.path("state").asText()) || "paused".equals(info.path("state").asText()))) return stream;
         }
-        return false;
+        return -1;
     }
-    static void normalizeLevel() throws Exception {
-        Thread.sleep(600);
-        int stream = -1;
-        for (int attempt = 0; attempt < 20 && stream < 0; attempt++) {
-            for (JsonNode object : snapshot()) {
-                JsonNode props = object.path("info").path("props");
-                if ("eventsoundstudio_pcm".equals(props.path("node.name").asText())
-                        && PipeWireEventOutput.APPLICATION_ID.equals(props.path("application.id").asText()))
-                    stream = object.path("id").asInt(-1);
+    /** Level restoration is deliberately off the stream-open path; it must never delay an event. */
+    static void normalizeLevelAsync(int stream, java.util.function.BooleanSupplier streamAlive) {
+        Thread.ofVirtual().name("event-level-normalize").start(() -> {
+            try {
+                if (!streamAlive.getAsBoolean()) return;
+                command("wpctl", "set-mute", Integer.toString(stream), "0");
+                if (!streamAlive.getAsBoolean()) return;
+                command("wpctl", "set-volume", Integer.toString(stream), "1.0");
+            } catch (Exception ignored) {
+                // A saved stream gain may still apply; the persistent stream stays usable.
             }
-            if (stream < 0) Thread.sleep(100);
-        }
-        if (stream < 0) throw new IOException("Event Sound Studio PCM stream is absent");
-        command("wpctl", "set-mute", Integer.toString(stream), "0");
-        command("wpctl", "set-volume", Integer.toString(stream), "1.0");
+        });
     }
     private static void command(String... args) throws Exception {
         for (int attempt = 0; attempt < 5; attempt++) {

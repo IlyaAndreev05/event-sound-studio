@@ -1,1628 +1,1246 @@
 {
-  "schema_version": 5,
-  "app": "event-sound-studio",
-  "active_profile": "desk",
-  "graph_routes": [],
-  "route_groups": [],
-  "saved_copies": [],
-  "source_profiles": {},
-  "settings": {
-    "language": "ru",
-    "theme": "system",
-    "master_volume": 0.65,
-    "master_mute": false,
-    "output": "audio_matrix_events",
-    "preview_output": "system_default",
-    "background_mode": "continue_audio",
-    "overlap_policy": "mix_with_limiter",
-    "default_cooldown_ms": 20,
-    "mouse_click_policy": {
-      "mode": "immediate_plus_double",
-      "double_click_window_ms": 250
+  "schema_version" : 5,
+  "app" : "event-sound-studio",
+  "active_profile" : "desk",
+  "graph_routes" : [ ],
+  "route_groups" : [ ],
+  "saved_copies" : [ ],
+  "source_profiles" : { },
+  "settings" : {
+    "language" : "ru",
+    "theme" : "system",
+    "master_volume" : 0.65,
+    "master_mute" : false,
+    "output" : "audio_matrix_events",
+    "preview_output" : "system_default",
+    "background_mode" : "continue_audio",
+    "overlap_policy" : "mix_with_limiter",
+    "default_cooldown_ms" : 20,
+    "mouse_click_policy" : {
+      "mode" : "immediate_plus_double",
+      "double_click_window_ms" : 250
     },
-    "keyboard_repeat": {
-      "mode": "ignore",
-      "minimum_interval_ms": 180
+    "keyboard_repeat" : {
+      "mode" : "ignore",
+      "minimum_interval_ms" : 180
     },
-    "input": {
-      "enable_keyboard": false,
-      "enable_mouse": false,
-      "enable_gnome": false,
-      "deduplicate_alt_tab_focus": false,
-      "device_allowlist": [],
-      "log_key_sequences": false
+    "input" : {
+      "enable_keyboard" : false,
+      "enable_mouse" : false,
+      "enable_gnome" : false,
+      "deduplicate_alt_tab_focus" : false,
+      "device_allowlist" : [ ],
+      "log_key_sequences" : false
     },
-    "wheel": {
-      "mode": "one_pulse_per_detent",
-      "high_resolution_preferred": true,
-      "units_per_detent": 120,
-      "legacy_deduplication": true,
-      "calibration": {
-        "observed_detents": 0,
-        "observed_units": 0
+    "wheel" : {
+      "mode" : "one_pulse_per_detent",
+      "high_resolution_preferred" : true,
+      "units_per_detent" : 120,
+      "legacy_deduplication" : true,
+      "calibration" : {
+        "observed_detents" : 0,
+        "observed_units" : 0
       }
     }
   },
-  "sounds": [
-    {
-      "id": "soft-click",
-      "name": "Мягкий клик",
-      "path": "assets/sounds/soft-click.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "мягкий",
-        "кнопки"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "soft-pop",
-      "name": "Мягкий щелчок",
-      "path": "assets/sounds/soft-pop.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "мягкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "key-tap",
-      "name": "Короткий клавишный щелчок",
-      "path": "assets/sounds/key-tap.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "клавиши",
-        "короткий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "key-tap-low",
-      "name": "Низкий клавишный щелчок",
-      "path": "assets/sounds/key-tap-low.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "клавиши"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "wood-click",
-      "name": "Деревянный щелчок",
-      "path": "assets/sounds/wood-click.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "дерево"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "wood-knock",
-      "name": "Деревянный стук",
-      "path": "assets/sounds/wood-knock.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "дерево",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "mechanical-tick",
-      "name": "Механический тик",
-      "path": "assets/sounds/mechanical-tick.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "механика"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "mechanical-clack",
-      "name": "Механический щелчок",
-      "path": "assets/sounds/mechanical-clack.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "механика"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "wheel-tick",
-      "name": "Деление колеса",
-      "path": "assets/sounds/wheel-tick.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "колесо",
-        "тактильный"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "wheel-soft",
-      "name": "Мягкое деление колеса",
-      "path": "assets/sounds/wheel-soft.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "колесо"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "bass-thump",
-      "name": "Низкий удар",
-      "path": "assets/sounds/bass-thump.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "бас",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "bass-pulse",
-      "name": "Басовый импульс",
-      "path": "assets/sounds/bass-pulse.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "бас"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "bass-knock",
-      "name": "Басовый стук",
-      "path": "assets/sounds/bass-knock.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "бас"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "electronic-blip",
-      "name": "Электронный сигнал",
-      "path": "assets/sounds/electronic-blip.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "электронный"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "electronic-high",
-      "name": "Высокий электронный сигнал",
-      "path": "assets/sounds/electronic-high.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "электронный"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "electronic-low",
-      "name": "Низкий электронный сигнал",
-      "path": "assets/sounds/electronic-low.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "электронный"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "chirp-up",
-      "name": "Восходящий чирп",
-      "path": "assets/sounds/chirp-up.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "свип"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "chirp-down",
-      "name": "Нисходящий чирп",
-      "path": "assets/sounds/chirp-down.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "свип"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "notification-one",
-      "name": "Уведомление: один тон",
-      "path": "assets/sounds/notification-one.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "уведомление"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "notification-two",
-      "name": "Уведомление: два тона",
-      "path": "assets/sounds/notification-two.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "уведомление"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "notification-three",
-      "name": "Уведомление: три тона",
-      "path": "assets/sounds/notification-three.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "уведомление"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "subtle-confirm",
-      "name": "Подтверждение",
-      "path": "assets/sounds/subtle-confirm.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "подтверждение"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "subtle-cancel",
-      "name": "Отмена",
-      "path": "assets/sounds/subtle-cancel.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "отмена"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "soft-alert",
-      "name": "Мягкое предупреждение",
-      "path": "assets/sounds/soft-alert.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "уведомление"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "wooden-tick",
-      "name": "Деревянный тик",
-      "path": "assets/sounds/wooden-tick.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "дерево"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "wooden-pop",
-      "name": "Деревянный щелчок",
-      "path": "assets/sounds/wooden-pop.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "дерево"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "ceramic-click",
-      "name": "Керамический щелчок",
-      "path": "assets/sounds/ceramic-click.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "короткий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "rubber-tap",
-      "name": "Резиновый тап",
-      "path": "assets/sounds/rubber-tap.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "мягкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "glass-tick",
-      "name": "Стеклянный тик",
-      "path": "assets/sounds/glass-tick.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "высокий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "paper-tap",
-      "name": "Бумажный тап",
-      "path": "assets/sounds/paper-tap.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "короткий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "click-round",
-      "name": "Округлый клик",
-      "path": "assets/sounds/click-round.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "кнопки"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "click-crisp",
-      "name": "Чёткий клик",
-      "path": "assets/sounds/click-crisp.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "кнопки"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "muted-thud",
-      "name": "Приглушённый удар",
-      "path": "assets/sounds/muted-thud.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "short-impulse",
-      "name": "Короткий импульс",
-      "path": "assets/sounds/short-impulse.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "импульс"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-keypress",
-      "name": "Тактильная клавиша",
-      "path": "assets/sounds/octine-keypress.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-click",
-      "name": "Тактильный клик",
-      "path": "assets/sounds/octine-click.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "мышь",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-double-click",
-      "name": "Двойной тактильный клик",
-      "path": "assets/sounds/octine-double-click.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "мышь",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-scroll",
-      "name": "Тактильное колесо",
-      "path": "assets/sounds/octine-scroll.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "колесо",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-right-click",
-      "name": "Тактильный правый клик",
-      "path": "assets/sounds/octine-right-click.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "мышь",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-enter",
-      "name": "Тактильный Enter",
-      "path": "assets/sounds/octine-enter.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-system",
-      "name": "Системная тактильная вибрация",
-      "path": "assets/sounds/octine-system.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "система",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-reminder",
-      "name": "Длинный тактильный сигнал",
-      "path": "assets/sounds/octine-reminder.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "система",
-        "низкий"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "rise-sweep",
-      "name": "Восходящий sweep",
-      "path": "assets/sounds/rise-sweep.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "свип"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "fall-sweep",
-      "name": "Нисходящий sweep",
-      "path": "assets/sounds/fall-sweep.wav",
-      "format": "pcm_wav",
-      "volume": 0.7,
-      "tags": [
-        "свип"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-function",
-      "name": "Function Tick",
-      "path": "assets/sounds/octine-function.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-middle-click",
-      "name": "Middle Click",
-      "path": "assets/sounds/octine-middle-click.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "мышь"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-technical",
-      "name": "Technical Tick",
-      "path": "assets/sounds/octine-technical.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-super",
-      "name": "Super",
-      "path": "assets/sounds/octine-super.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-backspace",
-      "name": "Backspace",
-      "path": "assets/sounds/octine-backspace.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-delete",
-      "name": "Delete",
-      "path": "assets/sounds/octine-delete.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "клавиатура"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-workspace",
-      "name": "Workspace Whoosh",
-      "path": "assets/sounds/octine-workspace.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "система"
-      ],
-      "favorite": false,
-      "builtin": true
-    },
-    {
-      "id": "octine-notification",
-      "name": "Notification Tap",
-      "path": "assets/sounds/octine-notification.wav",
-      "format": "pcm_wav",
-      "volume": 1.0,
-      "tags": [
-        "тактильный",
-        "система"
-      ],
-      "favorite": false,
-      "builtin": true
+  "sounds" : [ {
+    "id" : "soft-click",
+    "name" : "Мягкий клик",
+    "path" : "assets/sounds/soft-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "мягкий", "кнопки" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "soft-pop",
+    "name" : "Мягкий щелчок",
+    "path" : "assets/sounds/soft-pop.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "мягкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "key-tap",
+    "name" : "Короткий клавишный щелчок",
+    "path" : "assets/sounds/key-tap.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "клавиши", "короткий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "key-tap-low",
+    "name" : "Низкий клавишный щелчок",
+    "path" : "assets/sounds/key-tap-low.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "клавиши" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "wood-click",
+    "name" : "Деревянный щелчок",
+    "path" : "assets/sounds/wood-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "дерево" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "wood-knock",
+    "name" : "Деревянный стук",
+    "path" : "assets/sounds/wood-knock.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "дерево", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "mechanical-tick",
+    "name" : "Механический тик",
+    "path" : "assets/sounds/mechanical-tick.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "механика" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "mechanical-clack",
+    "name" : "Механический щелчок",
+    "path" : "assets/sounds/mechanical-clack.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "механика" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "wheel-tick",
+    "name" : "Деление колеса",
+    "path" : "assets/sounds/wheel-tick.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "колесо", "тактильный" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "wheel-soft",
+    "name" : "Мягкое деление колеса",
+    "path" : "assets/sounds/wheel-soft.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "колесо" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "bass-thump",
+    "name" : "Низкий удар",
+    "path" : "assets/sounds/bass-thump.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "бас", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "bass-pulse",
+    "name" : "Басовый импульс",
+    "path" : "assets/sounds/bass-pulse.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "бас" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "bass-knock",
+    "name" : "Басовый стук",
+    "path" : "assets/sounds/bass-knock.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "бас" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "electronic-blip",
+    "name" : "Электронный сигнал",
+    "path" : "assets/sounds/electronic-blip.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "электронный" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "electronic-high",
+    "name" : "Высокий электронный сигнал",
+    "path" : "assets/sounds/electronic-high.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "электронный" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "electronic-low",
+    "name" : "Низкий электронный сигнал",
+    "path" : "assets/sounds/electronic-low.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "электронный" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "chirp-up",
+    "name" : "Восходящий чирп",
+    "path" : "assets/sounds/chirp-up.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "свип" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "chirp-down",
+    "name" : "Нисходящий чирп",
+    "path" : "assets/sounds/chirp-down.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "свип" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "notification-one",
+    "name" : "Уведомление: один тон",
+    "path" : "assets/sounds/notification-one.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "уведомление" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "notification-two",
+    "name" : "Уведомление: два тона",
+    "path" : "assets/sounds/notification-two.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "уведомление" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "notification-three",
+    "name" : "Уведомление: три тона",
+    "path" : "assets/sounds/notification-three.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "уведомление" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "subtle-confirm",
+    "name" : "Подтверждение",
+    "path" : "assets/sounds/subtle-confirm.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "подтверждение" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "subtle-cancel",
+    "name" : "Отмена",
+    "path" : "assets/sounds/subtle-cancel.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "отмена" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "soft-alert",
+    "name" : "Мягкое предупреждение",
+    "path" : "assets/sounds/soft-alert.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "уведомление" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "wooden-tick",
+    "name" : "Деревянный тик",
+    "path" : "assets/sounds/wooden-tick.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "дерево" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "wooden-pop",
+    "name" : "Деревянный щелчок",
+    "path" : "assets/sounds/wooden-pop.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "дерево" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "ceramic-click",
+    "name" : "Керамический щелчок",
+    "path" : "assets/sounds/ceramic-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "короткий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "rubber-tap",
+    "name" : "Резиновый тап",
+    "path" : "assets/sounds/rubber-tap.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "мягкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "glass-tick",
+    "name" : "Стеклянный тик",
+    "path" : "assets/sounds/glass-tick.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "высокий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "paper-tap",
+    "name" : "Бумажный тап",
+    "path" : "assets/sounds/paper-tap.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "короткий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "click-round",
+    "name" : "Округлый клик",
+    "path" : "assets/sounds/click-round.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "кнопки" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "click-crisp",
+    "name" : "Чёткий клик",
+    "path" : "assets/sounds/click-crisp.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "кнопки" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "muted-thud",
+    "name" : "Приглушённый удар",
+    "path" : "assets/sounds/muted-thud.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "short-impulse",
+    "name" : "Короткий импульс",
+    "path" : "assets/sounds/short-impulse.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "импульс" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-function",
+    "name" : "Function Tick",
+    "path" : "assets/sounds/octine-function.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-middle-click",
+    "name" : "Middle Click",
+    "path" : "assets/sounds/octine-middle-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-technical",
+    "name" : "Technical Tick",
+    "path" : "assets/sounds/octine-technical.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-super",
+    "name" : "Super",
+    "path" : "assets/sounds/octine-super.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-backspace",
+    "name" : "Backspace",
+    "path" : "assets/sounds/octine-backspace.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-delete",
+    "name" : "Delete",
+    "path" : "assets/sounds/octine-delete.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-workspace",
+    "name" : "Workspace Whoosh",
+    "path" : "assets/sounds/octine-workspace.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "система" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-notification",
+    "name" : "Notification Tap",
+    "path" : "assets/sounds/octine-notification.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "система" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-keypress",
+    "name" : "Тактильная клавиша",
+    "path" : "assets/sounds/octine-keypress.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-click",
+    "name" : "Тактильный клик",
+    "path" : "assets/sounds/octine-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-double-click",
+    "name" : "Двойной тактильный клик",
+    "path" : "assets/sounds/octine-double-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-scroll",
+    "name" : "Тактильное колесо",
+    "path" : "assets/sounds/octine-scroll.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "колесо", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-right-click",
+    "name" : "Тактильный правый клик",
+    "path" : "assets/sounds/octine-right-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-enter",
+    "name" : "Тактильный Enter",
+    "path" : "assets/sounds/octine-enter.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-system",
+    "name" : "Системная тактильная вибрация",
+    "path" : "assets/sounds/octine-system.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "система", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-reminder",
+    "name" : "Длинный тактильный сигнал",
+    "path" : "assets/sounds/octine-reminder.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "система", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "rise-sweep",
+    "name" : "Восходящий sweep",
+    "path" : "assets/sounds/rise-sweep.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "свип" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "fall-sweep",
+    "name" : "Нисходящий sweep",
+    "path" : "assets/sounds/fall-sweep.wav",
+    "format" : "pcm_wav",
+    "volume" : 0.7,
+    "tags" : [ "свип" ],
+    "favorite" : false,
+    "builtin" : true
+  } ],
+  "event_types" : [ {
+    "id" : "key_press",
+    "source" : "evdev",
+    "match" : {
+      "kind" : "key",
+      "state" : "press"
     }
-  ],
-  "event_types": [
-    {
-      "id": "key_press",
-      "source": "evdev",
-      "match": {
-        "kind": "key",
-        "state": "press"
-      }
-    },
-    {
-      "id": "enter_press",
-      "source": "evdev",
-      "match": {
-        "key": "KEY_ENTER",
-        "state": "press"
-      }
-    },
-    {
-      "id": "mouse_left",
-      "source": "evdev",
-      "match": {
-        "button": "BTN_LEFT",
-        "state": "press"
-      }
-    },
-    {
-      "id": "mouse_double_left",
-      "source": "derived",
-      "match": {
-        "button": "BTN_LEFT",
-        "click_count": 2,
-        "window_ms": 250
-      }
-    },
-    {
-      "id": "wheel_up",
-      "source": "evdev",
-      "match": {
-        "axis": "vertical",
-        "direction": "up",
-        "unit": "detent"
-      }
-    },
-    {
-      "id": "wheel_down",
-      "source": "evdev",
-      "match": {
-        "axis": "vertical",
-        "direction": "down",
-        "unit": "detent"
-      }
-    },
-    {
-      "id": "wheel_left",
-      "source": "evdev",
-      "match": {
-        "axis": "horizontal",
-        "direction": "left",
-        "unit": "detent"
-      }
-    },
-    {
-      "id": "wheel_right",
-      "source": "evdev",
-      "match": {
-        "axis": "horizontal",
-        "direction": "right",
-        "unit": "detent"
-      }
-    },
-    {
-      "id": "combo_save",
-      "source": "evdev",
-      "match": {
-        "keys": [
-          "KEY_LEFTCTRL",
-          "KEY_S"
-        ],
-        "policy": "ONLY_COMBO"
-      }
-    },
-    {
-      "id": "desktop_changed",
-      "source": "gnome",
-      "match": {
-        "signal": "workspace_changed"
-      }
-    },
-    {
-      "id": "window_focus_changed",
-      "source": "gnome",
-      "match": {
-        "signal": "window_focus_changed"
-      }
-    },
-    {
-      "id": "window_opened",
-      "source": "gnome",
-      "match": {
-        "signal": "window_opened"
-      }
-    },
-    {
-      "id": "window_closed",
-      "source": "gnome",
-      "match": {
-        "signal": "window_closed"
-      }
-    },
-    {
-      "id": "api_test",
-      "source": "local_api",
-      "match": {
-        "event_id": "test"
-      }
-    },
-    {
-      "id": "backspace_press",
-      "source": "evdev",
-      "match": {
-        "key": "KEY_BACKSPACE",
-        "state": "press"
-      }
-    },
-    {
-      "id": "delete_press",
-      "source": "evdev",
-      "match": {
-        "key": "KEY_DELETE",
-        "state": "press"
-      }
-    },
-    {
-      "id": "notification_visible",
-      "source": "gnome",
-      "match": {
-        "signal": "notification_visible"
-      }
+  }, {
+    "id" : "enter_press",
+    "source" : "evdev",
+    "match" : {
+      "key" : "KEY_ENTER",
+      "state" : "press"
     }
-  ],
-  "groups": [
-    {
-      "id": "builtin.mouse",
-      "name": "Кнопки мыши",
-      "protected": true,
-      "members": [
-        "BTN_LEFT",
-        "BTN_RIGHT",
-        "BTN_MIDDLE",
-        "BTN_SIDE",
-        "BTN_EXTRA"
-      ],
-      "default_sound": "octine-click"
-    },
-    {
-      "id": "builtin.modifiers",
-      "name": "Модификаторы",
-      "protected": true,
-      "members": [
-        "KEY_LEFTCTRL",
-        "KEY_RIGHTCTRL",
-        "KEY_LEFTALT",
-        "KEY_RIGHTALT",
-        "KEY_LEFTSHIFT",
-        "KEY_RIGHTSHIFT",
-        "KEY_LEFTMETA",
-        "KEY_RIGHTMETA"
-      ],
-      "default_sound": "octine-click"
-    },
-    {
-      "id": "builtin.function",
-      "name": "F1–F12",
-      "protected": true,
-      "members": [
-        "KEY_F1",
-        "KEY_F2",
-        "KEY_F3",
-        "KEY_F4",
-        "KEY_F5",
-        "KEY_F6",
-        "KEY_F7",
-        "KEY_F8",
-        "KEY_F9",
-        "KEY_F10",
-        "KEY_F11",
-        "KEY_F12"
-      ],
-      "default_sound": "octine-click"
-    },
-    {
-      "id": "builtin.numpad",
-      "name": "NumPad",
-      "protected": true,
-      "members": [
-        "KEY_KP0",
-        "KEY_KP1",
-        "KEY_KP2",
-        "KEY_KP3",
-        "KEY_KP4",
-        "KEY_KP5",
-        "KEY_KP6",
-        "KEY_KP7",
-        "KEY_KP8",
-        "KEY_KP9",
-        "KEY_KPDOT",
-        "KEY_KPENTER",
-        "KEY_KPPLUS",
-        "KEY_KPMINUS",
-        "KEY_KPASTERISK",
-        "KEY_KPSLASH"
-      ],
-      "default_sound": "octine-keypress"
-    },
-    {
-      "id": "builtin.digits",
-      "name": "Цифры",
-      "protected": true,
-      "members": [
-        "KEY_0",
-        "KEY_1",
-        "KEY_2",
-        "KEY_3",
-        "KEY_4",
-        "KEY_5",
-        "KEY_6",
-        "KEY_7",
-        "KEY_8",
-        "KEY_9"
-      ],
-      "default_sound": "octine-keypress"
-    },
-    {
-      "id": "builtin.letters",
-      "name": "Буквы",
-      "protected": true,
-      "members": [
-        "KEY_A",
-        "KEY_B",
-        "KEY_C",
-        "KEY_D",
-        "KEY_E",
-        "KEY_F",
-        "KEY_G",
-        "KEY_H",
-        "KEY_I",
-        "KEY_J",
-        "KEY_K",
-        "KEY_L",
-        "KEY_M",
-        "KEY_N",
-        "KEY_O",
-        "KEY_P",
-        "KEY_Q",
-        "KEY_R",
-        "KEY_S",
-        "KEY_T",
-        "KEY_U",
-        "KEY_V",
-        "KEY_W",
-        "KEY_X",
-        "KEY_Y",
-        "KEY_Z"
-      ],
-      "default_sound": "octine-keypress"
-    },
-    {
-      "id": "builtin.navigation",
-      "name": "Навигация",
-      "protected": true,
-      "members": [
-        "KEY_ENTER",
-        "KEY_SPACE",
-        "KEY_TAB",
-        "KEY_ESC",
-        "KEY_BACKSPACE",
-        "KEY_DELETE",
-        "KEY_INSERT",
-        "KEY_HOME",
-        "KEY_END",
-        "KEY_PAGEUP",
-        "KEY_PAGEDOWN",
-        "KEY_UP",
-        "KEY_DOWN",
-        "KEY_LEFT",
-        "KEY_RIGHT"
-      ],
-      "default_sound": "octine-keypress"
-    },
-    {
-      "id": "custom.game",
-      "name": "Игра",
-      "protected": false,
-      "members": [
-        "KEY_W",
-        "KEY_A",
-        "KEY_S",
-        "KEY_D"
-      ],
-      "default_sound": "key-tap"
-    },
-    {
-      "id": "custom.function",
-      "name": "F1–F24",
-      "protected": false,
-      "members": [
-        "KEY_F1",
-        "KEY_F2",
-        "KEY_F3",
-        "KEY_F4",
-        "KEY_F5",
-        "KEY_F6",
-        "KEY_F7",
-        "KEY_F8",
-        "KEY_F9",
-        "KEY_F10",
-        "KEY_F11",
-        "KEY_F12",
-        "KEY_F13",
-        "KEY_F14",
-        "KEY_F15",
-        "KEY_F16",
-        "KEY_F17",
-        "KEY_F18",
-        "KEY_F19",
-        "KEY_F20",
-        "KEY_F21",
-        "KEY_F22",
-        "KEY_F23",
-        "KEY_F24"
-      ],
-      "default_sound": "octine-function"
-    },
-    {
-      "id": "custom.technical",
-      "name": "Технические клавиши",
-      "protected": false,
-      "members": [
-        "KEY_LEFTCTRL",
-        "KEY_RIGHTCTRL",
-        "KEY_LEFTALT",
-        "KEY_RIGHTALT",
-        "KEY_LEFTSHIFT",
-        "KEY_RIGHTSHIFT",
-        "KEY_TAB",
-        "KEY_ESC",
-        "KEY_INSERT",
-        "KEY_HOME",
-        "KEY_END",
-        "KEY_PAGEUP",
-        "KEY_PAGEDOWN",
-        "KEY_UP",
-        "KEY_DOWN",
-        "KEY_LEFT",
-        "KEY_RIGHT",
-        "KEY_CAPSLOCK",
-        "KEY_NUMLOCK",
-        "KEY_SCROLLLOCK",
-        "KEY_SYSRQ",
-        "KEY_PAUSE",
-        "KEY_MUTE",
-        "KEY_VOLUMEDOWN",
-        "KEY_VOLUMEUP",
-        "KEY_PLAYPAUSE",
-        "KEY_STOPCD",
-        "KEY_PREVIOUSSONG",
-        "KEY_NEXTSONG",
-        "KEY_BRIGHTNESSDOWN",
-        "KEY_BRIGHTNESSUP",
-        "KEY_FN"
-      ],
-      "default_sound": "octine-technical"
-    },
-    {
-      "id": "custom.punctuation",
-      "name": "Пунктуация и пробел",
-      "protected": false,
-      "members": [
-        "KEY_SPACE",
-        "KEY_MINUS",
-        "KEY_EQUAL",
-        "KEY_LEFTBRACE",
-        "KEY_RIGHTBRACE",
-        "KEY_BACKSLASH",
-        "KEY_SEMICOLON",
-        "KEY_APOSTROPHE",
-        "KEY_GRAVE",
-        "KEY_COMMA",
-        "KEY_DOT",
-        "KEY_SLASH",
-        "KEY_102ND"
-      ],
-      "default_sound": "octine-keypress"
+  }, {
+    "id" : "mouse_left",
+    "source" : "evdev",
+    "match" : {
+      "button" : "BTN_LEFT",
+      "state" : "press"
     }
-  ],
-  "bindings": [
-    {
-      "id": "letters-default",
-      "event": "group:builtin.letters",
-      "sound": "octine-keypress",
-      "enabled": true,
-      "priority": 10,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 45,
-      "remove_dc": false
-    },
-    {
-      "id": "digits-default",
-      "event": "group:builtin.digits",
-      "sound": "octine-keypress",
-      "enabled": true,
-      "priority": 10,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 45,
-      "remove_dc": false
-    },
-    {
-      "id": "enter-key",
-      "event": "enter_press",
-      "sound": "octine-enter",
-      "enabled": true,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 60,
-      "remove_dc": false
-    },
-    {
-      "id": "mouse-click",
-      "event": "mouse_left",
-      "sound": "octine-click",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 15,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 60,
-      "remove_dc": false
-    },
-    {
-      "id": "mouse-right-click",
-      "event": "button:BTN_RIGHT:press",
-      "sound": "octine-right-click",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 15,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 60,
-      "remove_dc": false
-    },
-    {
-      "id": "mouse-middle-click",
-      "event": "button:BTN_MIDDLE:press",
-      "sound": "octine-middle-click",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 15,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 48,
-      "remove_dc": false
-    },
-    {
-      "id": "mouse-double-click",
-      "event": "mouse_double_left",
-      "sound": "octine-double-click",
-      "enabled": false,
-      "priority": 80,
-      "volume": 0.7,
-      "cooldown_ms": 100,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 0,
-      "remove_dc": false
-    },
-    {
-      "id": "wheel-up",
-      "event": "wheel_up",
-      "sound": "octine-scroll",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 10,
-      "overlap": "restart",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 28,
-      "remove_dc": false
-    },
-    {
-      "id": "wheel-down",
-      "event": "wheel_down",
-      "sound": "octine-scroll",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 10,
-      "overlap": "restart",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 28,
-      "remove_dc": false
-    },
-    {
-      "id": "wheel-left",
-      "event": "wheel_left",
-      "sound": "octine-scroll",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 10,
-      "overlap": "restart",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 28,
-      "remove_dc": false
-    },
-    {
-      "id": "wheel-right",
-      "event": "wheel_right",
-      "sound": "octine-scroll",
-      "enabled": true,
-      "priority": 20,
-      "volume": 1.0,
-      "cooldown_ms": 10,
-      "overlap": "restart",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 28,
-      "remove_dc": false
-    },
-    {
-      "id": "save-combo",
-      "event": "combo_save",
-      "sound": "notification-two",
-      "enabled": true,
-      "priority": 100,
-      "volume": 0.4,
-      "cooldown_ms": 100,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 0,
-      "remove_dc": false
-    },
-    {
-      "id": "workspace-change",
-      "event": "desktop_changed",
-      "sound": "octine-workspace",
-      "enabled": true,
-      "priority": 50,
-      "volume": 1.0,
-      "cooldown_ms": 250,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 120,
-      "remove_dc": false
-    },
-    {
-      "id": "super-key-press",
-      "event": "key:KEY_LEFTMETA:press",
-      "sound": "octine-super",
-      "enabled": true,
-      "priority": 60,
-      "volume": 1.0,
-      "cooldown_ms": 120,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 65,
-      "remove_dc": false
-    },
-    {
-      "id": "super-right-key-press",
-      "event": "key:KEY_RIGHTMETA:press",
-      "sound": "octine-super",
-      "enabled": true,
-      "priority": 60,
-      "volume": 1.0,
-      "cooldown_ms": 120,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 65,
-      "remove_dc": false
-    },
-    {
-      "id": "window-focus",
-      "event": "window_focus_changed",
-      "sound": "subtle-confirm",
-      "enabled": true,
-      "priority": 40,
-      "volume": 0.25,
-      "cooldown_ms": 180,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 0,
-      "remove_dc": false
-    },
-    {
-      "id": "window-open",
-      "event": "window_opened",
-      "sound": "subtle-confirm",
-      "enabled": false,
-      "priority": 35,
-      "volume": 0.2,
-      "cooldown_ms": 200,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 0,
-      "remove_dc": false
-    },
-    {
-      "id": "window-close",
-      "event": "window_closed",
-      "sound": "subtle-cancel",
-      "enabled": false,
-      "priority": 35,
-      "volume": 0.2,
-      "cooldown_ms": 200,
-      "overlap": "ignore",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 0,
-      "remove_dc": false
-    },
-    {
-      "id": "custom-test-api",
-      "event": "api_test",
-      "sound": "key-tap",
-      "enabled": true,
-      "priority": 1,
-      "volume": 0.5,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 0,
-      "remove_dc": false
-    },
-    {
-      "id": "punctuation-default",
-      "event": "group:custom.punctuation",
-      "sound": "octine-keypress",
-      "enabled": true,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 45,
-      "remove_dc": false
-    },
-    {
-      "id": "function-keys",
-      "event": "group:custom.function",
-      "sound": "octine-function",
-      "enabled": true,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 38,
-      "remove_dc": false
-    },
-    {
-      "id": "technical-keys",
-      "event": "group:custom.technical",
-      "sound": "octine-technical",
-      "enabled": false,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 28,
-      "remove_dc": false
-    },
-    {
-      "id": "backspace-key",
-      "event": "backspace_press",
-      "sound": "octine-backspace",
-      "enabled": true,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 42,
-      "remove_dc": false
-    },
-    {
-      "id": "delete-key",
-      "event": "delete_press",
-      "sound": "octine-delete",
-      "enabled": true,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 48,
-      "remove_dc": false
-    },
-    {
-      "id": "notification-tap",
-      "event": "notification_visible",
-      "sound": "octine-notification",
-      "enabled": true,
-      "priority": 30,
-      "volume": 1.0,
-      "cooldown_ms": 0,
-      "overlap": "mix",
-      "output": "profile_default",
-      "eq": {
-        "enabled": false,
-        "filters": []
-      },
-      "attack_ms": 0,
-      "release_ms": 0,
-      "duration_ms": 85,
-      "remove_dc": false
+  }, {
+    "id" : "mouse_double_left",
+    "source" : "derived",
+    "match" : {
+      "button" : "BTN_LEFT",
+      "click_count" : 2,
+      "window_ms" : 250
     }
-  ],
-  "combos": [
-    {
-      "id": "save",
-      "keys": [
-        "KEY_LEFTCTRL",
-        "KEY_S"
-      ],
-      "policy": "ONLY_COMBO",
-      "event": "combo_save"
+  }, {
+    "id" : "wheel_up",
+    "source" : "evdev",
+    "match" : {
+      "axis" : "vertical",
+      "direction" : "up",
+      "unit" : "detent"
     }
-  ],
-  "profiles": [
-    {
-      "id": "desk",
-      "name": "Рабочий стол",
-      "enabled_bindings": [
-        "letters-default",
-        "digits-default",
-        "enter-key",
-        "mouse-click",
-        "mouse-right-click",
-        "mouse-middle-click",
-        "mouse-double-click",
-        "wheel-up",
-        "wheel-down",
-        "wheel-left",
-        "wheel-right",
-        "save-combo",
-        "workspace-change",
-        "window-focus",
-        "super-key-press",
-        "super-right-key-press",
-        "custom-test-api",
-        "punctuation-default",
-        "function-keys",
-        "backspace-key",
-        "delete-key",
-        "notification-tap"
-      ],
-      "output": "audio_matrix_events",
-      "master_volume": 1.0
+  }, {
+    "id" : "wheel_down",
+    "source" : "evdev",
+    "match" : {
+      "axis" : "vertical",
+      "direction" : "down",
+      "unit" : "detent"
+    }
+  }, {
+    "id" : "wheel_left",
+    "source" : "evdev",
+    "match" : {
+      "axis" : "horizontal",
+      "direction" : "left",
+      "unit" : "detent"
+    }
+  }, {
+    "id" : "wheel_right",
+    "source" : "evdev",
+    "match" : {
+      "axis" : "horizontal",
+      "direction" : "right",
+      "unit" : "detent"
+    }
+  }, {
+    "id" : "combo_save",
+    "source" : "evdev",
+    "match" : {
+      "keys" : [ "KEY_LEFTCTRL", "KEY_S" ],
+      "policy" : "ONLY_COMBO"
+    }
+  }, {
+    "id" : "desktop_changed",
+    "source" : "gnome",
+    "match" : {
+      "signal" : "workspace_changed"
+    }
+  }, {
+    "id" : "window_focus_changed",
+    "source" : "gnome",
+    "match" : {
+      "signal" : "window_focus_changed"
+    }
+  }, {
+    "id" : "window_opened",
+    "source" : "gnome",
+    "match" : {
+      "signal" : "window_opened"
+    }
+  }, {
+    "id" : "window_closed",
+    "source" : "gnome",
+    "match" : {
+      "signal" : "window_closed"
+    }
+  }, {
+    "id" : "api_test",
+    "source" : "local_api",
+    "match" : {
+      "event_id" : "test"
+    }
+  }, {
+    "id" : "backspace_press",
+    "source" : "evdev",
+    "match" : {
+      "key" : "KEY_BACKSPACE",
+      "state" : "press"
+    }
+  }, {
+    "id" : "delete_press",
+    "source" : "evdev",
+    "match" : {
+      "key" : "KEY_DELETE",
+      "state" : "press"
+    }
+  }, {
+    "id" : "notification_visible",
+    "source" : "gnome",
+    "match" : {
+      "signal" : "notification_visible"
+    }
+  } ],
+  "groups" : [ {
+    "id" : "builtin.mouse",
+    "name" : "Кнопки мыши",
+    "protected" : true,
+    "members" : [ "BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "builtin.modifiers",
+    "name" : "Модификаторы",
+    "protected" : true,
+    "members" : [ "KEY_LEFTCTRL", "KEY_RIGHTCTRL", "KEY_LEFTALT", "KEY_RIGHTALT", "KEY_LEFTSHIFT", "KEY_RIGHTSHIFT", "KEY_LEFTMETA", "KEY_RIGHTMETA" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "builtin.function",
+    "name" : "F1–F12",
+    "protected" : true,
+    "members" : [ "KEY_F1", "KEY_F2", "KEY_F3", "KEY_F4", "KEY_F5", "KEY_F6", "KEY_F7", "KEY_F8", "KEY_F9", "KEY_F10", "KEY_F11", "KEY_F12" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "builtin.numpad",
+    "name" : "NumPad",
+    "protected" : true,
+    "members" : [ "KEY_KP0", "KEY_KP1", "KEY_KP2", "KEY_KP3", "KEY_KP4", "KEY_KP5", "KEY_KP6", "KEY_KP7", "KEY_KP8", "KEY_KP9", "KEY_KPDOT", "KEY_KPENTER", "KEY_KPPLUS", "KEY_KPMINUS", "KEY_KPASTERISK", "KEY_KPSLASH" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "builtin.digits",
+    "name" : "Цифры",
+    "protected" : true,
+    "members" : [ "KEY_0", "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5", "KEY_6", "KEY_7", "KEY_8", "KEY_9" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "builtin.letters",
+    "name" : "Буквы",
+    "protected" : true,
+    "members" : [ "KEY_A", "KEY_B", "KEY_C", "KEY_D", "KEY_E", "KEY_F", "KEY_G", "KEY_H", "KEY_I", "KEY_J", "KEY_K", "KEY_L", "KEY_M", "KEY_N", "KEY_O", "KEY_P", "KEY_Q", "KEY_R", "KEY_S", "KEY_T", "KEY_U", "KEY_V", "KEY_W", "KEY_X", "KEY_Y", "KEY_Z" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "builtin.navigation",
+    "name" : "Навигация",
+    "protected" : true,
+    "members" : [ "KEY_ENTER", "KEY_SPACE", "KEY_TAB", "KEY_ESC", "KEY_BACKSPACE", "KEY_DELETE", "KEY_INSERT", "KEY_HOME", "KEY_END", "KEY_PAGEUP", "KEY_PAGEDOWN", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "custom.game",
+    "name" : "Игра",
+    "protected" : false,
+    "members" : [ "KEY_W", "KEY_A", "KEY_S", "KEY_D" ],
+    "default_sound" : "key-tap"
+  }, {
+    "id" : "custom.function",
+    "name" : "F1–F24",
+    "protected" : false,
+    "members" : [ "KEY_F1", "KEY_F2", "KEY_F3", "KEY_F4", "KEY_F5", "KEY_F6", "KEY_F7", "KEY_F8", "KEY_F9", "KEY_F10", "KEY_F11", "KEY_F12", "KEY_F13", "KEY_F14", "KEY_F15", "KEY_F16", "KEY_F17", "KEY_F18", "KEY_F19", "KEY_F20", "KEY_F21", "KEY_F22", "KEY_F23", "KEY_F24" ],
+    "default_sound" : "octine-click"
+  }, {
+    "id" : "custom.technical",
+    "name" : "Технические клавиши",
+    "protected" : false,
+    "members" : [ "KEY_LEFTCTRL", "KEY_RIGHTCTRL", "KEY_LEFTALT", "KEY_RIGHTALT", "KEY_LEFTSHIFT", "KEY_RIGHTSHIFT", "KEY_TAB", "KEY_ESC", "KEY_INSERT", "KEY_HOME", "KEY_END", "KEY_PAGEUP", "KEY_PAGEDOWN", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT", "KEY_CAPSLOCK", "KEY_NUMLOCK", "KEY_SCROLLLOCK", "KEY_SYSRQ", "KEY_PAUSE", "KEY_MUTE", "KEY_VOLUMEDOWN", "KEY_VOLUMEUP", "KEY_PLAYPAUSE", "KEY_STOPCD", "KEY_PREVIOUSSONG", "KEY_NEXTSONG", "KEY_BRIGHTNESSDOWN", "KEY_BRIGHTNESSUP", "KEY_FN" ],
+    "default_sound" : "octine-technical"
+  }, {
+    "id" : "custom.punctuation",
+    "name" : "Пунктуация и пробел",
+    "protected" : false,
+    "members" : [ "KEY_SPACE", "KEY_MINUS", "KEY_EQUAL", "KEY_LEFTBRACE", "KEY_RIGHTBRACE", "KEY_BACKSLASH", "KEY_SEMICOLON", "KEY_APOSTROPHE", "KEY_GRAVE", "KEY_COMMA", "KEY_DOT", "KEY_SLASH", "KEY_102ND" ],
+    "default_sound" : "octine-click"
+  } ],
+  "bindings" : [ {
+    "id" : "letters-default",
+    "event" : "group:builtin.letters",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 10,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
     },
-    {
-      "id": "quiet",
-      "name": "Тихий режим",
-      "enabled_bindings": [
-        "custom-test-api"
-      ],
-      "output": "audio_matrix_events",
-      "master_volume": 0.25
-    }
-  ],
-  "api": {
-    "enabled": false
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "digits-default",
+    "event" : "group:builtin.digits",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 10,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "all-key-press",
+    "event" : "key_press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 5,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "navigation-default",
+    "event" : "group:builtin.navigation",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 10,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "numpad-default",
+    "event" : "group:builtin.numpad",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 10,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "modifiers-default",
+    "event" : "group:builtin.modifiers",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 0.15,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "enter-key",
+    "event" : "enter_press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-click",
+    "event" : "mouse_left",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 15,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-right-click",
+    "event" : "button:BTN_RIGHT:press",
+    "sound" : "octine-right-click",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 15,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-middle-click",
+    "event" : "button:BTN_MIDDLE:press",
+    "sound" : "octine-middle-click",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 15,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 48,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-double-click",
+    "event" : "mouse_double_left",
+    "sound" : "octine-double-click",
+    "enabled" : false,
+    "priority" : 80,
+    "volume" : 0.7,
+    "cooldown_ms" : 100,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 0,
+    "remove_dc" : false
+  }, {
+    "id" : "wheel-up",
+    "event" : "wheel_up",
+    "sound" : "octine-scroll",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 10,
+    "overlap" : "restart",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 28,
+    "remove_dc" : false
+  }, {
+    "id" : "wheel-down",
+    "event" : "wheel_down",
+    "sound" : "octine-scroll",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 10,
+    "overlap" : "restart",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 28,
+    "remove_dc" : false
+  }, {
+    "id" : "wheel-left",
+    "event" : "wheel_left",
+    "sound" : "octine-scroll",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 10,
+    "overlap" : "restart",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 28,
+    "remove_dc" : false
+  }, {
+    "id" : "wheel-right",
+    "event" : "wheel_right",
+    "sound" : "octine-scroll",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 10,
+    "overlap" : "restart",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 28,
+    "remove_dc" : false
+  }, {
+    "id" : "save-combo",
+    "event" : "combo_save",
+    "sound" : "notification-two",
+    "enabled" : true,
+    "priority" : 100,
+    "volume" : 0.4,
+    "cooldown_ms" : 100,
+    "overlap" : "ignore",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 0,
+    "remove_dc" : false
+  }, {
+    "id" : "workspace-change",
+    "event" : "desktop_changed",
+    "sound" : "octine-workspace",
+    "enabled" : true,
+    "priority" : 50,
+    "volume" : 1.0,
+    "cooldown_ms" : 250,
+    "overlap" : "ignore",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 120,
+    "remove_dc" : false
+  }, {
+    "id" : "super-key-press",
+    "event" : "key:KEY_LEFTMETA:press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 60,
+    "volume" : 0.15,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "super-right-key-press",
+    "event" : "key:KEY_RIGHTMETA:press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 60,
+    "volume" : 0.15,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "window-focus",
+    "event" : "window_focus_changed",
+    "sound" : "subtle-confirm",
+    "enabled" : true,
+    "priority" : 40,
+    "volume" : 0.25,
+    "cooldown_ms" : 180,
+    "overlap" : "ignore",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 0,
+    "remove_dc" : false
+  }, {
+    "id" : "window-open",
+    "event" : "window_opened",
+    "sound" : "subtle-confirm",
+    "enabled" : false,
+    "priority" : 35,
+    "volume" : 0.2,
+    "cooldown_ms" : 200,
+    "overlap" : "ignore",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 0,
+    "remove_dc" : false
+  }, {
+    "id" : "window-close",
+    "event" : "window_closed",
+    "sound" : "subtle-cancel",
+    "enabled" : false,
+    "priority" : 35,
+    "volume" : 0.2,
+    "cooldown_ms" : 200,
+    "overlap" : "ignore",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 0,
+    "remove_dc" : false
+  }, {
+    "id" : "custom-test-api",
+    "event" : "api_test",
+    "sound" : "key-tap",
+    "enabled" : true,
+    "priority" : 1,
+    "volume" : 0.5,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 0,
+    "remove_dc" : false
+  }, {
+    "id" : "punctuation-default",
+    "event" : "group:custom.punctuation",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "function-keys",
+    "event" : "group:custom.function",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 0.15,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "technical-keys",
+    "event" : "group:custom.technical",
+    "sound" : "octine-technical",
+    "enabled" : false,
+    "priority" : 30,
+    "volume" : 1.0,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 28,
+    "remove_dc" : false
+  }, {
+    "id" : "backspace-key",
+    "event" : "backspace_press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "delete-key",
+    "event" : "delete_press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 0.07,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "notification-tap",
+    "event" : "notification_visible",
+    "sound" : "octine-notification",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 1.0,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 85,
+    "remove_dc" : false
+  } ],
+  "combos" : [ {
+    "id" : "save",
+    "keys" : [ "KEY_LEFTCTRL", "KEY_S" ],
+    "policy" : "ONLY_COMBO",
+    "event" : "combo_save"
+  } ],
+  "profiles" : [ {
+    "id" : "desk",
+    "name" : "Рабочий стол",
+    "enabled_bindings" : [ "letters-default", "digits-default", "all-key-press", "navigation-default", "numpad-default", "modifiers-default", "enter-key", "mouse-click", "mouse-right-click", "mouse-middle-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api", "punctuation-default", "function-keys", "backspace-key", "delete-key", "notification-tap" ],
+    "output" : "audio_matrix_events",
+    "master_volume" : 1.0
+  }, {
+    "id" : "quiet",
+    "name" : "Тихий режим",
+    "enabled_bindings" : [ "custom-test-api" ],
+    "output" : "audio_matrix_events",
+    "master_volume" : 0.25
+  } ],
+  "api" : {
+    "enabled" : false
   }
 }
