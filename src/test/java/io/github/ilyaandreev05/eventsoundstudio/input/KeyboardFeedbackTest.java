@@ -24,12 +24,12 @@ class KeyboardFeedbackTest {
         assertTrue(Boolean.TRUE.equals(bindings.get("all-key-press").get("enabled")));
         assertEquals("group:builtin.modifiers",bindings.get("modifiers-default").get("event"));
         assertEquals("octine-click",bindings.get("modifiers-default").get("sound"));
-        assertEquals(0.15,bindings.get("modifiers-default").get("volume"));
+        assertEquals(0.105,bindings.get("modifiers-default").get("volume"));
         assertEquals("octine-click",bindings.get("function-keys").get("sound"));
-        assertEquals(0.15,bindings.get("function-keys").get("volume"));
+        assertEquals(0.105,bindings.get("function-keys").get("volume"));
         assertEquals("octine-click",bindings.get("super-key-press").get("sound"));
         assertEquals("octine-click",bindings.get("super-right-key-press").get("sound"));
-        assertEquals(0.15,bindings.get("super-key-press").get("volume"));
+        assertEquals(0.105,bindings.get("super-key-press").get("volume"));
         Map<String,Object> desk=profile(config,"desk");
         assertTrue(((List<?>)desk.get("enabled_bindings")).containsAll(List.of("all-key-press","modifiers-default")));
     }

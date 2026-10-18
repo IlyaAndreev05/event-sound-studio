@@ -23,13 +23,24 @@ final class PipeWireEventOutput {
                 .filter(value -> !value.isBlank()).anyMatch(value -> Files.isExecutable(Path.of(value, "pw-cat")));
     }
 
+    private static final String PIPE_LIMIT = "import fcntl,os,sys\ntry: fcntl.fcntl(0,1031,4096)\nexcept OSError: pass\nos.execvp(sys.argv[1],sys.argv[1:])";
+
     static List<String> command() {
         String properties = "{\"application.id\":\"" + APPLICATION_ID
                 + "\",\"application.name\":\"Event Sound Studio\",\"media.name\":\"Event effects\","
                 + "\"node.name\":\"eventsoundstudio_pcm\",\"target.object\":\"" + NODE_NAME + "\",\"node.dont-fallback\":true,\"node.dont-reconnect\":true}";
-        return List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME, "--volume=1", "--latency=256",
+        List<String> pwCat = List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME, "--volume=1", "--latency=256",
                 "--rate", "48000", "--channels", "2", "--channel-map", "FL,FR",
                 "--format", "s16", "--properties=" + properties, "-");
+        if (!available("python3")) return pwCat;
+        List<String> wrapped = new java.util.ArrayList<>(List.of("python3", "-c", PIPE_LIMIT));
+        wrapped.addAll(pwCat);
+        return List.copyOf(wrapped);
+    }
+
+    private static boolean available(String executable) {
+        return java.util.Arrays.stream(System.getenv().getOrDefault("PATH", "").split(java.io.File.pathSeparator))
+                .filter(value -> !value.isBlank()).anyMatch(value -> Files.isExecutable(Path.of(value, executable)));
     }
 
     static SourceDataLine openLine(AudioFormat format) throws IOException {
@@ -46,6 +57,7 @@ final class PipeWireEventOutput {
                 .start();
         LinuxPipeBudget.shrink(process);
         OutputStream input = process.getOutputStream();
+        LinuxPipeBudget.shrink(process);
         try {
             input.write(new byte[1024]); input.flush();
             int stream = -1;

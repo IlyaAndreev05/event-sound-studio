@@ -44,11 +44,11 @@ final class DefaultEventPresets {
             }
         }
         bindings.add(shortBinding("punctuation-default", "group:custom.punctuation", "octine-click", true, 0.07, 60));
-        bindings.add(shortBinding("function-keys", "group:custom.function", "octine-click", true, 0.15, 60));
-        bindings.add(shortBinding("technical-keys", "group:custom.technical", "octine-technical", false, 1.0, 28));
+        bindings.add(shortBinding("function-keys", "group:custom.function", "octine-click", true, 0.105, 60));
+        bindings.add(shortBinding("technical-keys", "group:custom.technical", "octine-technical", false, 0.7, 28));
         bindings.add(shortBinding("backspace-key", "backspace_press", "octine-click", true, 0.07, 60));
         bindings.add(shortBinding("delete-key", "delete_press", "octine-click", true, 0.07, 60));
-        bindings.add(shortBinding("notification-tap", "notification_visible", "octine-notification", true, 1.0, 85));
+        bindings.add(shortBinding("notification-tap", "notification_visible", "octine-notification", true, 0.7, 85));
         for (Map<String,Object> profile : maps(root.get("profiles"))) {
             List<Object> enabled = new ArrayList<>((List<?>) profile.get("enabled_bindings"));
             if ("desk".equals(profile.get("id"))) {
