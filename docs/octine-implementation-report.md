@@ -30,5 +30,7 @@ Baseline saved on `main` and merged to `develop`: `1569e73`.
 - The installed GNOME extension must be updated and GNOME Shell restarted/session re-logged for the new notification policy; the old extension emits workspace/window events only.
 - The temporary `eventN` identity of the virtual test device is intentionally rejected (`disabled-or-unsupported-interface`); physical authorized devices are used instead.
 - Bluetooth headphones were not available during verification.
-- The 30-minute continuous stress run and final .deb installation are tracked in the delivery report.
+- Installed package: Event Sound Studio `0.2.2`; `eventsoundstudio.service` is installed and active. The package's new GNOME extension files include `notificationPolicy.js`; a Wayland session re-login is still required for GNOME Shell to load the new extension code.
+- Feature commit: `6c08166`; merge into `develop`: `2572a82`; branch pushed to `origin/feat/octine-haptics-event-routing`.
+- A 30-minute continuous run was started on 2026-10-18 17:53 MSK; its result is appended below when finished.
 - Physical loudness is subjective; the user reported the first imported level as too strong, so the default Vibro gain was lowered to 0.6.
