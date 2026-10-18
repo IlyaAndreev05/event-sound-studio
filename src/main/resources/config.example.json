@@ -350,6 +350,78 @@
     "favorite" : false,
     "builtin" : true
   }, {
+    "id" : "octine-keypress",
+    "name" : "Тактильная клавиша",
+    "path" : "assets/sounds/octine-keypress.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-click",
+    "name" : "Тактильный клик",
+    "path" : "assets/sounds/octine-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-double-click",
+    "name" : "Двойной тактильный клик",
+    "path" : "assets/sounds/octine-double-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-scroll",
+    "name" : "Тактильное колесо",
+    "path" : "assets/sounds/octine-scroll.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "колесо", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-right-click",
+    "name" : "Тактильный правый клик",
+    "path" : "assets/sounds/octine-right-click.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-enter",
+    "name" : "Тактильный Enter",
+    "path" : "assets/sounds/octine-enter.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "клавиатура", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-system",
+    "name" : "Системная тактильная вибрация",
+    "path" : "assets/sounds/octine-system.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "система", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
+    "id" : "octine-reminder",
+    "name" : "Длинный тактильный сигнал",
+    "path" : "assets/sounds/octine-reminder.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "система", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
     "id" : "rise-sweep",
     "name" : "Восходящий sweep",
     "path" : "assets/sounds/rise-sweep.wav",
@@ -468,47 +540,47 @@
     }
   } ],
   "groups" : [ {
-    "id" : "builtin.digits",
-    "name" : "Цифры",
+    "id" : "builtin.mouse",
+    "name" : "Кнопки мыши",
     "protected" : true,
-    "members" : [ "KEY_0", "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5", "KEY_6", "KEY_7", "KEY_8", "KEY_9" ],
-    "default_sound" : "key-tap"
-  }, {
-    "id" : "builtin.numpad",
-    "name" : "NumPad",
-    "protected" : true,
-    "members" : [ "KEY_KP0", "KEY_KP1", "KEY_KP2", "KEY_KP3", "KEY_KP4", "KEY_KP5", "KEY_KP6", "KEY_KP7", "KEY_KP8", "KEY_KP9", "KEY_KPDOT", "KEY_KPENTER", "KEY_KPPLUS", "KEY_KPMINUS", "KEY_KPASTERISK", "KEY_KPSLASH" ],
-    "default_sound" : "key-tap"
-  }, {
-    "id" : "builtin.function",
-    "name" : "F1–F12",
-    "protected" : true,
-    "members" : [ "KEY_F1", "KEY_F2", "KEY_F3", "KEY_F4", "KEY_F5", "KEY_F6", "KEY_F7", "KEY_F8", "KEY_F9", "KEY_F10", "KEY_F11", "KEY_F12" ],
-    "default_sound" : "soft-click"
+    "members" : [ "BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA" ],
+    "default_sound" : "octine-click"
   }, {
     "id" : "builtin.modifiers",
     "name" : "Модификаторы",
     "protected" : true,
     "members" : [ "KEY_LEFTCTRL", "KEY_RIGHTCTRL", "KEY_LEFTALT", "KEY_RIGHTALT", "KEY_LEFTSHIFT", "KEY_RIGHTSHIFT", "KEY_LEFTMETA", "KEY_RIGHTMETA" ],
-    "default_sound" : "soft-click"
+    "default_sound" : "octine-click"
   }, {
-    "id" : "builtin.mouse",
-    "name" : "Кнопки мыши",
+    "id" : "builtin.function",
+    "name" : "F1–F12",
     "protected" : true,
-    "members" : [ "BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA" ],
-    "default_sound" : "soft-click"
+    "members" : [ "KEY_F1", "KEY_F2", "KEY_F3", "KEY_F4", "KEY_F5", "KEY_F6", "KEY_F7", "KEY_F8", "KEY_F9", "KEY_F10", "KEY_F11", "KEY_F12" ],
+    "default_sound" : "octine-click"
   }, {
-    "id" : "builtin.navigation",
-    "name" : "Навигация",
+    "id" : "builtin.numpad",
+    "name" : "NumPad",
     "protected" : true,
-    "members" : [ "KEY_ENTER", "KEY_SPACE", "KEY_TAB", "KEY_ESC", "KEY_BACKSPACE", "KEY_DELETE", "KEY_INSERT", "KEY_HOME", "KEY_END", "KEY_PAGEUP", "KEY_PAGEDOWN", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT" ],
-    "default_sound" : "key-tap"
+    "members" : [ "KEY_KP0", "KEY_KP1", "KEY_KP2", "KEY_KP3", "KEY_KP4", "KEY_KP5", "KEY_KP6", "KEY_KP7", "KEY_KP8", "KEY_KP9", "KEY_KPDOT", "KEY_KPENTER", "KEY_KPPLUS", "KEY_KPMINUS", "KEY_KPASTERISK", "KEY_KPSLASH" ],
+    "default_sound" : "octine-keypress"
+  }, {
+    "id" : "builtin.digits",
+    "name" : "Цифры",
+    "protected" : true,
+    "members" : [ "KEY_0", "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5", "KEY_6", "KEY_7", "KEY_8", "KEY_9" ],
+    "default_sound" : "octine-keypress"
   }, {
     "id" : "builtin.letters",
     "name" : "Буквы",
     "protected" : true,
     "members" : [ "KEY_A", "KEY_B", "KEY_C", "KEY_D", "KEY_E", "KEY_F", "KEY_G", "KEY_H", "KEY_I", "KEY_J", "KEY_K", "KEY_L", "KEY_M", "KEY_N", "KEY_O", "KEY_P", "KEY_Q", "KEY_R", "KEY_S", "KEY_T", "KEY_U", "KEY_V", "KEY_W", "KEY_X", "KEY_Y", "KEY_Z" ],
-    "default_sound" : "key-tap"
+    "default_sound" : "octine-keypress"
+  }, {
+    "id" : "builtin.navigation",
+    "name" : "Навигация",
+    "protected" : true,
+    "members" : [ "KEY_ENTER", "KEY_SPACE", "KEY_TAB", "KEY_ESC", "KEY_BACKSPACE", "KEY_DELETE", "KEY_INSERT", "KEY_HOME", "KEY_END", "KEY_PAGEUP", "KEY_PAGEDOWN", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT" ],
+    "default_sound" : "octine-keypress"
   }, {
     "id" : "custom.game",
     "name" : "Игра",
@@ -519,10 +591,10 @@
   "bindings" : [ {
     "id" : "all-key-press",
     "event" : "key_press",
-    "sound" : "key-tap",
+    "sound" : "octine-keypress",
     "enabled" : true,
     "priority" : 5,
-    "volume" : 0.45,
+    "volume" : 1.0,
     "cooldown_ms" : 0,
     "overlap" : "mix",
     "output" : "profile_default",
@@ -537,10 +609,10 @@
   }, {
     "id" : "letters-default",
     "event" : "group:builtin.letters",
-    "sound" : "key-tap",
+    "sound" : "octine-keypress",
     "enabled" : true,
     "priority" : 10,
-    "volume" : 0.5,
+    "volume" : 1.0,
     "cooldown_ms" : 0,
     "overlap" : "mix",
     "output" : "profile_default",
@@ -555,47 +627,11 @@
   }, {
     "id" : "digits-default",
     "event" : "group:builtin.digits",
-    "sound" : "key-tap-low",
+    "sound" : "octine-keypress",
     "enabled" : true,
     "priority" : 10,
-    "volume" : 0.45,
+    "volume" : 1.0,
     "cooldown_ms" : 0,
-    "overlap" : "mix",
-    "output" : "profile_default",
-    "eq" : {
-      "enabled" : false,
-      "filters" : [ ]
-    },
-    "attack_ms" : 0,
-    "release_ms" : 0,
-    "duration_ms" : 0,
-    "remove_dc" : false
-  }, {
-    "id" : "enter-key",
-    "event" : "enter_press",
-    "sound" : "soft-click",
-    "enabled" : true,
-    "priority" : 30,
-    "volume" : 0.6,
-    "cooldown_ms" : 0,
-    "overlap" : "mix",
-    "output" : "profile_default",
-    "eq" : {
-      "enabled" : false,
-      "filters" : [ ]
-    },
-    "attack_ms" : 0,
-    "release_ms" : 0,
-    "duration_ms" : 0,
-    "remove_dc" : false
-  }, {
-    "id" : "mouse-click",
-    "event" : "mouse_left",
-    "sound" : "soft-click",
-    "enabled" : true,
-    "priority" : 20,
-    "volume" : 0.55,
-    "cooldown_ms" : 15,
     "overlap" : "mix",
     "output" : "profile_default",
     "eq" : {
@@ -607,12 +643,84 @@
     "duration_ms" : 45,
     "remove_dc" : false
   }, {
+    "id" : "enter-key",
+    "event" : "enter_press",
+    "sound" : "octine-enter",
+    "enabled" : true,
+    "priority" : 30,
+    "volume" : 1.0,
+    "cooldown_ms" : 0,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-click",
+    "event" : "mouse_left",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 15,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-right-click",
+    "event" : "button:BTN_RIGHT:press",
+    "sound" : "octine-right-click",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 15,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
+    "id" : "mouse-middle-click",
+    "event" : "button:BTN_MIDDLE:press",
+    "sound" : "octine-click",
+    "enabled" : true,
+    "priority" : 20,
+    "volume" : 1.0,
+    "cooldown_ms" : 15,
+    "overlap" : "mix",
+    "output" : "profile_default",
+    "eq" : {
+      "enabled" : false,
+      "filters" : [ ]
+    },
+    "attack_ms" : 0,
+    "release_ms" : 0,
+    "duration_ms" : 60,
+    "remove_dc" : false
+  }, {
     "id" : "mouse-double-click",
     "event" : "mouse_double_left",
-    "sound" : "notification-one",
-    "enabled" : true,
+    "sound" : "octine-double-click",
+    "enabled" : false,
     "priority" : 80,
-    "volume" : 0.35,
+    "volume" : 0.7,
     "cooldown_ms" : 100,
     "overlap" : "mix",
     "output" : "profile_default",
@@ -627,10 +735,10 @@
   }, {
     "id" : "wheel-up",
     "event" : "wheel_up",
-    "sound" : "wheel-tick",
+    "sound" : "octine-scroll",
     "enabled" : true,
     "priority" : 20,
-    "volume" : 0.5,
+    "volume" : 1.0,
     "cooldown_ms" : 10,
     "overlap" : "restart",
     "output" : "profile_default",
@@ -645,10 +753,10 @@
   }, {
     "id" : "wheel-down",
     "event" : "wheel_down",
-    "sound" : "wheel-tick",
+    "sound" : "octine-scroll",
     "enabled" : true,
     "priority" : 20,
-    "volume" : 0.5,
+    "volume" : 1.0,
     "cooldown_ms" : 10,
     "overlap" : "restart",
     "output" : "profile_default",
@@ -663,10 +771,10 @@
   }, {
     "id" : "wheel-left",
     "event" : "wheel_left",
-    "sound" : "wheel-tick",
+    "sound" : "octine-scroll",
     "enabled" : true,
     "priority" : 20,
-    "volume" : 0.5,
+    "volume" : 1.0,
     "cooldown_ms" : 10,
     "overlap" : "restart",
     "output" : "profile_default",
@@ -681,10 +789,10 @@
   }, {
     "id" : "wheel-right",
     "event" : "wheel_right",
-    "sound" : "wheel-tick",
+    "sound" : "octine-scroll",
     "enabled" : true,
     "priority" : 20,
-    "volume" : 0.5,
+    "volume" : 1.0,
     "cooldown_ms" : 10,
     "overlap" : "restart",
     "output" : "profile_default",
@@ -717,10 +825,10 @@
   }, {
     "id" : "workspace-change",
     "event" : "desktop_changed",
-    "sound" : "notification-one",
+    "sound" : "octine-reminder",
     "enabled" : true,
     "priority" : 50,
-    "volume" : 0.3,
+    "volume" : 1.0,
     "cooldown_ms" : 250,
     "overlap" : "ignore",
     "output" : "profile_default",
@@ -735,10 +843,10 @@
   }, {
     "id" : "super-key-press",
     "event" : "key:KEY_LEFTMETA:press",
-    "sound" : "soft-pop",
+    "sound" : "octine-system",
     "enabled" : true,
     "priority" : 60,
-    "volume" : 0.35,
+    "volume" : 1.0,
     "cooldown_ms" : 120,
     "overlap" : "ignore",
     "output" : "profile_default",
@@ -753,10 +861,10 @@
   }, {
     "id" : "super-right-key-press",
     "event" : "key:KEY_RIGHTMETA:press",
-    "sound" : "soft-pop",
+    "sound" : "octine-system",
     "enabled" : true,
     "priority" : 60,
-    "volume" : 0.35,
+    "volume" : 1.0,
     "cooldown_ms" : 120,
     "overlap" : "ignore",
     "output" : "profile_default",
@@ -850,9 +958,9 @@
   "profiles" : [ {
     "id" : "desk",
     "name" : "Рабочий стол",
-    "enabled_bindings" : [ "all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api" ],
+    "enabled_bindings" : [ "all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-right-click", "mouse-middle-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api" ],
     "output" : "audio_matrix_events",
-    "master_volume" : 0.65
+    "master_volume" : 1.0
   }, {
     "id" : "quiet",
     "name" : "Тихий режим",

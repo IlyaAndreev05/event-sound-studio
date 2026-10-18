@@ -26,7 +26,7 @@ public final class DefaultConfig {
                         "calibration", map("observed_detents", 0, "observed_units", 0))));
         List<Map<String, Object>> sounds = new ArrayList<>();
         for (SoundAsset sound : builtInSounds()) sounds.add(map("id", sound.id(), "name", sound.name(),
-                "path", "assets/sounds/" + sound.id() + ".wav", "format", "pcm_wav", "volume", 0.7,
+                "path", "assets/sounds/" + sound.id() + ".wav", "format", "pcm_wav", "volume", sound.id().startsWith("octine-") ? 1.0 : 0.7,
                 "tags", sound.tags(), "favorite", false, "builtin", true));
         root.put("sounds", sounds);
         root.put("event_types", List.of(
@@ -51,21 +51,24 @@ public final class DefaultConfig {
                 "members", List.of("KEY_W", "KEY_A", "KEY_S", "KEY_D"), "default_sound", "key-tap"));
         root.put("groups", groups);
         List<Map<String, Object>> bindings = new ArrayList<>();
-        bindings.add(binding("all-key-press", "key_press", "key-tap", true, 5, 0.45, 0, "mix"));
-        bindings.add(binding("letters-default", "group:builtin.letters", "key-tap", true, 10, 0.5, 0, "mix"));
-        bindings.add(binding("digits-default", "group:builtin.digits", "key-tap-low", true, 10, 0.45, 0, "mix"));
-        bindings.add(binding("enter-key", "enter_press", "soft-click", true, 30, 0.6, 0, "mix"));
-        bindings.add(binding("mouse-click", "mouse_left", "soft-click", true, 20, 0.55, 15, "mix"));
-        bindings.add(binding("mouse-double-click", "mouse_double_left", "notification-one", true, 80, 0.35, 100, "mix"));
-        bindings.add(binding("wheel-up", "wheel_up", "wheel-tick", true, 20, 0.5, 10, "restart"));
-        bindings.add(binding("wheel-down", "wheel_down", "wheel-tick", true, 20, 0.5, 10, "restart"));
-        bindings.add(binding("wheel-left", "wheel_left", "wheel-tick", true, 20, 0.5, 10, "restart"));
-        bindings.add(binding("wheel-right", "wheel_right", "wheel-tick", true, 20, 0.5, 10, "restart"));
+        bindings.add(binding("all-key-press", "key_press", "octine-keypress", true, 5, 1.0, 0, "mix"));
+        bindings.add(binding("letters-default", "group:builtin.letters", "octine-keypress", true, 10, 1.0, 0, "mix"));
+        bindings.add(binding("digits-default", "group:builtin.digits", "octine-keypress", true, 10, 1.0, 0, "mix"));
+        bindings.add(binding("enter-key", "enter_press", "octine-enter", true, 30, 1.0, 0, "mix"));
+        bindings.add(binding("mouse-click", "mouse_left", "octine-click", true, 20, 1.0, 15, "mix"));
+        bindings.add(binding("mouse-right-click", "button:BTN_RIGHT:press", "octine-right-click", true, 20, 1.0, 15, "mix"));
+        bindings.add(binding("mouse-middle-click", "button:BTN_MIDDLE:press", "octine-click", true, 20, 1.0, 15, "mix"));
+        bindings.add(binding("mouse-double-click", "mouse_double_left", "octine-double-click", false, 80, 0.7, 100, "mix"));
+        bindings.add(binding("wheel-up", "wheel_up", "octine-scroll", true, 20, 1.0, 10, "restart"));
+        bindings.add(binding("wheel-down", "wheel_down", "octine-scroll", true, 20, 1.0, 10, "restart"));
+        bindings.add(binding("wheel-left", "wheel_left", "octine-scroll", true, 20, 1.0, 10, "restart"));
+        bindings.add(binding("wheel-right", "wheel_right", "octine-scroll", true, 20, 1.0, 10, "restart"));
         bindings.add(binding("save-combo", "combo_save", "notification-two", true, 100, 0.4, 100, "ignore"));
-        bindings.add(binding("workspace-change", "desktop_changed", "notification-one", true, 50, 0.3, 250, "ignore"));
-        bindings.add(binding("super-key-press", "key:KEY_LEFTMETA:press", "soft-pop", true, 60, 0.35, 120, "ignore"));
-        bindings.add(binding("super-right-key-press", "key:KEY_RIGHTMETA:press", "soft-pop", true, 60, 0.35, 120, "ignore"));
-        bindings.stream().filter(binding -> List.of("all-key-press","letters-default","mouse-click").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 45));
+        bindings.add(binding("workspace-change", "desktop_changed", "octine-reminder", true, 50, 1.0, 250, "ignore"));
+        bindings.add(binding("super-key-press", "key:KEY_LEFTMETA:press", "octine-system", true, 60, 1.0, 120, "ignore"));
+        bindings.add(binding("super-right-key-press", "key:KEY_RIGHTMETA:press", "octine-system", true, 60, 1.0, 120, "ignore"));
+        bindings.stream().filter(binding -> List.of("all-key-press","letters-default","digits-default").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 45));
+        bindings.stream().filter(binding -> List.of("enter-key","mouse-click","mouse-right-click","mouse-middle-click").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 60));
         bindings.stream().filter(binding -> String.valueOf(binding.get("id")).startsWith("wheel-")).forEach(binding -> binding.put("duration_ms", 28));
         bindings.stream().filter(binding -> "workspace-change".equals(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 450));
         bindings.stream().filter(binding -> List.of("super-key-press","super-right-key-press").contains(binding.get("id"))).forEach(binding -> binding.put("duration_ms", 220));
@@ -76,7 +79,7 @@ public final class DefaultConfig {
         root.put("bindings", bindings);
         root.put("combos", List.of(map("id", "save", "keys", List.of("KEY_LEFTCTRL", "KEY_S"), "policy", "ONLY_COMBO", "event", "combo_save")));
         root.put("profiles", List.of(
-                map("id", "desk", "name", "Рабочий стол", "enabled_bindings", List.of("all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api"), "output", io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS, "master_volume", 0.65),
+                map("id", "desk", "name", "Рабочий стол", "enabled_bindings", List.of("all-key-press", "letters-default", "digits-default", "enter-key", "mouse-click", "mouse-right-click", "mouse-middle-click", "mouse-double-click", "wheel-up", "wheel-down", "wheel-left", "wheel-right", "save-combo", "workspace-change", "window-focus", "super-key-press", "super-right-key-press", "custom-test-api"), "output", io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS, "master_volume", 1.0),
                 map("id", "quiet", "name", "Тихий режим", "enabled_bindings", List.of("custom-test-api"), "output", io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS, "master_volume", 0.25)));
         root.put("api", map("enabled", false));
         return root;
@@ -118,6 +121,14 @@ public final class DefaultConfig {
                 new SoundAsset("click-crisp", "Чёткий клик", List.of("кнопки")),
                 new SoundAsset("muted-thud", "Приглушённый удар", List.of("низкий")),
                 new SoundAsset("short-impulse", "Короткий импульс", List.of("импульс")),
+                new SoundAsset("octine-keypress", "Тактильная клавиша", List.of("тактильный", "клавиатура", "низкий")),
+                new SoundAsset("octine-click", "Тактильный клик", List.of("тактильный", "мышь", "низкий")),
+                new SoundAsset("octine-double-click", "Двойной тактильный клик", List.of("тактильный", "мышь", "низкий")),
+                new SoundAsset("octine-scroll", "Тактильное колесо", List.of("тактильный", "колесо", "низкий")),
+                new SoundAsset("octine-right-click", "Тактильный правый клик", List.of("тактильный", "мышь", "низкий")),
+                new SoundAsset("octine-enter", "Тактильный Enter", List.of("тактильный", "клавиатура", "низкий")),
+                new SoundAsset("octine-system", "Системная тактильная вибрация", List.of("тактильный", "система", "низкий")),
+                new SoundAsset("octine-reminder", "Длинный тактильный сигнал", List.of("тактильный", "система", "низкий")),
                 new SoundAsset("rise-sweep", "Восходящий sweep", List.of("свип")),
                 new SoundAsset("fall-sweep", "Нисходящий sweep", List.of("свип")));
     }
@@ -130,9 +141,9 @@ public final class DefaultConfig {
     }
     private static String defaultSound(String group) {
         return switch (group) {
-            case "builtin.function", "builtin.modifiers", "builtin.mouse" -> "soft-click";
-            case "builtin.navigation" -> "key-tap";
-            default -> "key-tap";
+            case "builtin.function", "builtin.modifiers", "builtin.mouse" -> "octine-click";
+            case "builtin.navigation" -> "octine-keypress";
+            default -> "octine-keypress";
         };
     }
     private static Map<String, List<String>> groups() {
