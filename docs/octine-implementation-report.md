@@ -32,5 +32,5 @@ Baseline saved on `main` and merged to `develop`: `1569e73`.
 - Bluetooth headphones were not available during verification.
 - Installed package: Event Sound Studio `0.2.2`; `eventsoundstudio.service` is installed and active. The package's new GNOME extension files include `notificationPolicy.js`; a Wayland session re-login is still required for GNOME Shell to load the new extension code.
 - Feature commit: `6c08166`; merge into `develop`: `2572a82`; branch pushed to `origin/feat/octine-haptics-event-routing`.
-- A 30-minute continuous run was started on 2026-10-18 17:53 MSK; its result is appended below when finished.
+- Continuous installed-system run: 25 minutes, 375 event pulses alongside looping music; no PCM/service restart and zero `pw-top` errors on analog/HDMI. Stopped at user request before 30 minutes, so AC-06 is not fully closed.
 - Physical loudness is subjective; the user reported the first imported level as too strong, so the default Vibro gain was lowered to 0.6.
