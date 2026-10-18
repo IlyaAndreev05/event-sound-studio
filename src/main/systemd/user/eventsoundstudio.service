@@ -1,0 +1,17 @@
+[Unit]
+Description=Event Sound Studio background event audio
+After=graphical-session.target pipewire.service wireplumber.service
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/opt/eventsoundstudio/bin/EventSoundStudio --background
+ExecStop=/opt/eventsoundstudio/bin/EventSoundStudio --quit
+Restart=on-failure
+RestartPreventExitStatus=2 3
+RestartSec=2
+TimeoutStopSec=25
+KillMode=control-group
+
+[Install]
+WantedBy=graphical-session.target

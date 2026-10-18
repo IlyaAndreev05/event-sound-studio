@@ -67,6 +67,25 @@ public final class SoundLibrary implements AutoCloseable {
             finally{deleteQuietly(temporary);}
         },loader);
     }
+    public CompletableFuture<PcmSound> previewGenerated(SynthesisParameters parameters){
+        return CompletableFuture.supplyAsync(()->new PcmSound("generator-preview","Preview",
+                SoundSynthesizer.generate(parameters),1,SoundSynthesizer.SAMPLE_RATE),loader);
+    }
+    public CompletableFuture<Path> exportGenerated(SynthesisParameters parameters,Path destination,boolean replaceExisting){
+        return CompletableFuture.supplyAsync(()->{
+            Path temporary=null;
+            try{
+                Path target=destination.toAbsolutePath().normalize(),parent=target.getParent();
+                if(parent==null)throw new IOException("Export destination has no parent directory");
+                Files.createDirectories(parent);
+                if(!replaceExisting&&Files.exists(target))throw new java.nio.file.FileAlreadyExistsException(target.toString());
+                temporary=Files.createTempFile(parent,".ess-export-",".wav.tmp");
+                SoundSynthesizer.writeWav(temporary,SoundSynthesizer.generate(parameters),SoundSynthesizer.SAMPLE_RATE);
+                return installExport(temporary,target,replaceExisting);
+            }catch(Exception e){throw new java.util.concurrent.CompletionException(e);}
+            finally{deleteQuietly(temporary);}
+        },loader);
+    }
     private static Path installExport(Path temporary,Path target,boolean replaceExisting)throws IOException{
         if(replaceExisting){try{Files.move(temporary,target,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException e){Files.move(temporary,target,StandardCopyOption.REPLACE_EXISTING);}}
         else Files.move(temporary,target);
@@ -137,14 +156,19 @@ public final class SoundLibrary implements AutoCloseable {
         },loader);
     }
     public CompletableFuture<Entry> saveGenerated(String name, SoundSynthesizer.Waveform waveform, double frequency, double amplitude, int durationMs, int repeats, double dcOffset){
+        return saveGenerated(name,new SynthesisParameters(waveform,frequency,amplitude,durationMs,repeats,dcOffset,SoundEnvelope.forDuration(durationMs)));
+    }
+    public CompletableFuture<Entry> saveGenerated(String name,SynthesisParameters parameters){
         return CompletableFuture.supplyAsync(()->{
+            Path path=null;
             try{
+                if(name==null||name.isBlank())throw new IllegalArgumentException("Sound name must not be empty");
                 String id="generated-"+UUID.randomUUID().toString().substring(0,8);Path folder=store.dataDirectory().resolve("library/generated");Files.createDirectories(folder);
-                Path path=folder.resolve(id+".wav");float[] samples=SoundSynthesizer.generate(waveform,frequency,amplitude,durationMs,repeats,dcOffset);
-                SoundSynthesizer.writeWav(path,samples,SoundSynthesizer.SAMPLE_RATE);PcmSound pcm=SoundSynthesizer.loadWav(path,id,name);
-                String relative=store.dataDirectory().relativize(path).toString();Map<String,Object> meta=new LinkedHashMap<>();meta.put("id",id);meta.put("name",name);meta.put("path",relative);meta.put("format","pcm_wav");meta.put("volume",0.7);meta.put("tags",List.of("generated"));meta.put("builtin",false);
-                Entry entry=new Entry(id,name,relative,path,pcm,meta,null);entries.put(id,entry);return entry;
-            }catch(Exception e){throw new java.util.concurrent.CompletionException(e);}
+                path=folder.resolve(id+".wav");float[] samples=SoundSynthesizer.generate(parameters);
+                SoundSynthesizer.writeWav(path,samples,SoundSynthesizer.SAMPLE_RATE);PcmSound pcm=SoundSynthesizer.loadWav(path,id,name.trim());
+                String relative=store.dataDirectory().relativize(path).toString();Map<String,Object> meta=new LinkedHashMap<>();meta.put("id",id);meta.put("name",name.trim());meta.put("path",relative);meta.put("format","pcm_wav");meta.put("volume",0.7);meta.put("tags",List.of("generated"));meta.put("builtin",false);meta.put("generator",parameters.metadata());
+                Entry entry=new Entry(id,name.trim(),relative,path,pcm,meta,null);entries.put(id,entry);return entry;
+            }catch(Exception e){deleteQuietly(path);throw new java.util.concurrent.CompletionException(e);}
         },loader);
     }
     private Path resolve(String rel)throws IOException{

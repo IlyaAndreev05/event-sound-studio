@@ -29,13 +29,16 @@ class EventRouterOutputIsolationTest {
              SoundLibrary library = new SoundLibrary(store)) {
             Map<String,Object> config = DefaultConfig.create();
             ((Map<String,Object>) config.get("settings")).put("preview_output", "preview-only-output");
+            for(Map<String,Object> binding:(List<Map<String,Object>>)config.get("bindings"))
+                if("api_test".equals(binding.get("event")))binding.put("cooldown_ms",10_000);
             library.loadAll((List<Map<String,Object>>) config.get("sounds")).get(5, TimeUnit.SECONDS);
             EventRouter router = new EventRouter(engine, library);
             router.update(config);
             engine.start(ignored -> {});
 
-            assertTrue(router.trigger("api_test"), "a live event must be accepted");
-            assertTrue(router.previewEvent("api_test"), "an explicit GUI event preview must be accepted");
+            assertTrue(router.previewEvent("api_test"), "GUI previews must not consume the live event cooldown");
+            assertTrue(router.trigger("api_test"), "a live event after preview must be accepted");
+            org.junit.jupiter.api.Assertions.assertFalse(router.trigger("api_test"), "the live event cooldown must still apply");
             assertTrue(router.playSound("key-tap"), "sound previews must be accepted");
             assertTrue(audioBlocks.await(3, TimeUnit.SECONDS), "all routed PCM blocks should reach injected test lines");
 

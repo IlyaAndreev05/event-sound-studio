@@ -63,12 +63,12 @@ import java.util.function.Consumer;
 abstract class AppShellUiPart02 extends AppShellUiPart01 {
     protected AppShellUiPart02(ConfigStore store, AudioEngine engine, SoundLibrary library, EventRouter router, EvdevDeviceScanner scanner, EvdevInputService input, InputEventDispatcher dispatcher, LocalControlApi api, ThemeManager theme) { super(store, engine, library, router, scanner, input, dispatcher, api, theme); }
 
-    protected void exportGeneratedWav(TextField name,ComboBox<SoundSynthesizer.Waveform> waveform,TextField frequency,TextField amplitude,TextField duration,TextField repeats,TextField dc){
+    protected void exportGeneratedWav(TextField name,io.github.ilyaandreev05.eventsoundstudio.audio.SynthesisParameters parameters){
         try{
             if(name.getText().isBlank())throw new IllegalArgumentException(t("Введите имя файла.","Enter a file name."));
             FileChooser chooser=new FileChooser();chooser.setTitle(t("Экспорт готового звука","Export generated sound"));chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("WAV audio","*.wav","*.WAV"));chooser.setInitialFileName(name.getText().trim().replaceAll("[\\\\/:*?\\\"<>|]","_")+".wav");java.io.File file=chooser.showSaveDialog(getScene().getWindow());if(file==null)return;
             Path destination=ensureWavSuffix(file.toPath());boolean replace=Files.exists(destination);if(replace&&!confirmOverwrite(destination))return;
-            setNotice(t("Экспортирую WAV…","Exporting WAV…"),false);library.exportGenerated(waveform.getValue(),parse(frequency),parse(amplitude),Integer.parseInt(duration.getText()),Integer.parseInt(repeats.getText()),parse(dc),destination,replace).whenComplete((saved,error)->Platform.runLater(()->setNotice(error==null?t("WAV сохранён: ","WAV exported: ")+saved:t("Экспорт не выполнен: ","Export failed: ")+message(error),error!=null)));
+            setNotice(t("Экспортирую WAV…","Exporting WAV…"),false);library.exportGenerated(parameters,destination,replace).whenComplete((saved,error)->Platform.runLater(()->setNotice(error==null?t("WAV сохранён: ","WAV exported: ")+saved:t("Экспорт не выполнен: ","Export failed: ")+message(error),error!=null)));
         }catch(Exception e){setNotice(t("Параметры генератора не приняты: ","Invalid generator settings: ")+message(e),true);}
     }
 

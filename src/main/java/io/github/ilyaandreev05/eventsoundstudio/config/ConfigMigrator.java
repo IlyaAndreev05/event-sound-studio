@@ -6,7 +6,7 @@ import java.util.Map;
 
 /** Small, lossless fixes for known persisted-default mistakes. */
 public final class ConfigMigrator {
-    public static final int CURRENT_SCHEMA_VERSION = 4;
+    public static final int CURRENT_SCHEMA_VERSION = 5;
     private ConfigMigrator(){}
 
     /** Upgrades persisted settings and archives while keeping event audio fail-closed. */
@@ -19,8 +19,6 @@ public final class ConfigMigrator {
             changed |= migrateKnownDefaults(root, addDefaultBindings);
             version = 3;
             changed = true;
-        } else if (addDefaultBindings) {
-            changed |= migrateKnownDefaults(root, true);
         }
         if (version < 4) {
             Map<String,Object> settings = mutableMap(root.get("settings"));
@@ -35,6 +33,11 @@ public final class ConfigMigrator {
             for (Map<String,Object> binding : maps(root.get("bindings")))
                 binding.put("output", "profile_default");
             root.put("schema_version", 4);
+            changed = true;
+        }
+        if (version < 5) {
+            if (addDefaultBindings) EventPresetMigration.apply(root);
+            root.put("schema_version", 5);
             changed = true;
         }
         return changed;
@@ -80,11 +83,13 @@ public final class ConfigMigrator {
         Object rawBindings=root.get("bindings");Object rawProfiles=root.get("profiles");if(rawBindings instanceof List<?> bindingList&&rawProfiles instanceof List<?> profileList){
             @SuppressWarnings("unchecked") List<Map<String,Object>> bindings=(List<Map<String,Object>>)bindingList;
             Map<String,Object> defaults=DefaultConfig.create();List<Map<String,Object>> defaultBindings=maps(defaults.get("bindings"));
-            for(String id:addDefaultBindings?List.of("all-key-press","super-key-press"):List.<String>of()){
+            for(String id:addDefaultBindings?List.of("super-key-press"):List.<String>of()){
                 Map<String,Object> defaultBinding=defaultBindings.stream().filter(item->id.equals(item.get("id"))).findFirst().orElse(null);if(defaultBinding==null)continue;
                 String event=String.valueOf(defaultBinding.get("event"));boolean exists=bindings.stream().anyMatch(item->id.equals(item.get("id"))||event.equals(item.get("event")));
-                if(!exists){bindings.add(copyMap(defaultBinding));changed=true;}
-                for(Object item:profileList)if(item instanceof Map<?,?> profileRaw){@SuppressWarnings("unchecked") Map<String,Object> profile=(Map<String,Object>)profileRaw;if(!"desk".equals(profile.get("id")))continue;Object enabledRaw=profile.get("enabled_bindings");if(enabledRaw instanceof List<?> enabledList){@SuppressWarnings("unchecked") List<Object> enabled=(List<Object>)enabledList;if(bindings.stream().anyMatch(candidate->id.equals(candidate.get("id")))&&!enabled.contains(id)){enabled.add(id);changed=true;}}}
+                if(!exists){
+                    bindings.add(copyMap(defaultBinding));changed=true;
+                    for(Object item:profileList)if(item instanceof Map<?,?> profileRaw){@SuppressWarnings("unchecked") Map<String,Object> profile=(Map<String,Object>)profileRaw;if(!"desk".equals(profile.get("id")))continue;Object enabledRaw=profile.get("enabled_bindings");if(enabledRaw instanceof List<?> enabledList){List<Object> enabled=new ArrayList<>(enabledList);if(!enabled.contains(id)){enabled.add(id);profile.put("enabled_bindings",enabled);}}}
+                }
             }
             Map<String,Integer> durations=Map.of("all-key-press",45,"letters-default",45,"mouse-click",45,"wheel-up",28,"wheel-down",28,"wheel-left",28,"wheel-right",28,"workspace-change",450,"super-key-press",220);
             for(Map<String,Object> binding:bindings)if(durations.containsKey(String.valueOf(binding.get("id")))&&number(binding.get("duration_ms"),0)==0){binding.put("duration_ms",durations.get(String.valueOf(binding.get("id"))));changed=true;}

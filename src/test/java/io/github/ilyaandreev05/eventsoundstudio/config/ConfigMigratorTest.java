@@ -23,8 +23,8 @@ class ConfigMigratorTest {
         new ObjectMapper(new YAMLFactory()).writeValue(file.toFile(),config);
         try(ConfigStore store=new ConfigStore(json,file)){
             Map<String,Object> migrated=store.snapshot();@SuppressWarnings("unchecked") List<Map<String,Object>> fixedGroups=(List<Map<String,Object>>)migrated.get("groups");Map<String,Object> fixed=fixedGroups.stream().filter(g->"builtin.letters".equals(g.get("id"))).findFirst().orElseThrow();
-            assertEquals(4,((Number)migrated.get("schema_version")).intValue());assertEquals(DefaultConfig.BUILTIN_GROUPS.get("builtin.letters"),fixed.get("members"));assertEquals(List.of(),ConfigValidator.validate(migrated));assertTrue(Files.readString(json).contains("KEY_A"));assertFalse(Files.readString(json).contains("KEY_AA"));assertTrue(Files.exists(temp.resolve("config.yaml.before-json")));
-            assertEquals("api_test",((Map<?,?>)((List<?>)migrated.get("bindings")).getLast()).get("event"));
+            assertEquals(5,((Number)migrated.get("schema_version")).intValue());assertEquals(DefaultConfig.BUILTIN_GROUPS.get("builtin.letters"),fixed.get("members"));assertEquals(List.of(),ConfigValidator.validate(migrated));assertTrue(Files.readString(json).contains("KEY_A"));assertFalse(Files.readString(json).contains("KEY_AA"));assertTrue(Files.exists(temp.resolve("config.yaml.before-json")));
+            assertTrue(((List<?>)migrated.get("bindings")).stream().anyMatch(item -> "api_test".equals(((Map<?,?>)item).get("event"))));
         }
     }
 
@@ -49,5 +49,23 @@ class ConfigMigratorTest {
         settings.put("preview_output",io.github.ilyaandreev05.eventsoundstudio.audio.MixerOutputSelector.AUDIO_MATRIX_EVENTS);
 
         assertTrue(ConfigValidator.validate(config).stream().anyMatch(error->error.contains("preview_output must not target")));
+    }
+
+    @Test void schemaFiveDoesNotReenableExistingChoicesOrInjectIntoPartialArchives() {
+        Map<String,Object> config=DefaultConfig.create();
+        config.put("schema_version",4);
+        @SuppressWarnings("unchecked") List<Map<String,Object>> bindings=(List<Map<String,Object>>)config.get("bindings");
+        bindings.stream().filter(b->"function-keys".equals(b.get("id"))).forEach(b->b.put("enabled",false));
+        @SuppressWarnings("unchecked") List<Map<String,Object>> profiles=(List<Map<String,Object>>)config.get("profiles");
+        profiles.getFirst().put("enabled_bindings",new ArrayList<>(List.of("letters-default")));
+        assertTrue(ConfigMigrator.migrateToCurrentSchema(config,true));
+        assertEquals(List.of("letters-default"),profiles.getFirst().get("enabled_bindings"));
+        assertFalse(ConfigMigrator.migrateToCurrentSchema(config,true));
+        assertFalse((Boolean)bindings.stream().filter(b->"function-keys".equals(b.get("id"))).findFirst().orElseThrow().get("enabled"));
+        Map<String,Object> partial=DefaultConfig.map("schema_version",4,"sounds",new ArrayList<>(),"bindings",new ArrayList<>());
+        assertTrue(ConfigMigrator.migrateToCurrentSchema(partial,false));
+        assertEquals(List.of(),partial.get("sounds"));
+        assertEquals(List.of(),partial.get("bindings"));
+        assertFalse(partial.containsKey("groups"));
     }
 }

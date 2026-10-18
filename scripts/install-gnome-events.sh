@@ -13,7 +13,7 @@ repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
 source_dir=$package_source
 if [ ! -r "$source_dir/extension.js" ]; then source_dir="$repo_root/gnome/event-sound-studio-events"; fi
 
-if [ ! -r "$source_dir/extension.js" ] || [ ! -r "$source_dir/metadata.json" ]; then
+if [ ! -r "$source_dir/extension.js" ] || [ ! -r "$source_dir/metadata.json" ] || [ ! -r "$source_dir/notificationPolicy.js" ]; then
     echo "Event Sound Studio GNOME extension files are missing." >&2
     exit 1
 fi
@@ -42,6 +42,7 @@ trap restore_on_error EXIT HUP INT TERM
 mkdir "$tmp"
 install -m 0644 "$source_dir/metadata.json" "$tmp/metadata.json"
 install -m 0644 "$source_dir/extension.js" "$tmp/extension.js"
+install -m 0644 "$source_dir/notificationPolicy.js" "$tmp/notificationPolicy.js"
 mv "$tmp" "$target"
 printf '%s\n' "$previous_state" > "$state_dir/previous-state"
 printf '%s\n' "$enabled_state" > "$state_dir/previous-enabled"

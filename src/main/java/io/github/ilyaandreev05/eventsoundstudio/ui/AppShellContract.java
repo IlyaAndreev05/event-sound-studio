@@ -87,7 +87,7 @@ abstract class AppShellContract extends BorderPane {
     protected abstract void deleteSound(SoundLibrary.Entry entry);
     protected abstract void deleteUnusedSoundFiles(SoundLibrary.Entry entry,Map<String,Object> nextConfig)throws Exception;
     protected abstract VBox generatorPage();
-    protected abstract void exportGeneratedWav(TextField name,ComboBox<SoundSynthesizer.Waveform> waveform,TextField frequency,TextField amplitude,TextField duration,TextField repeats,TextField dc);
+    protected abstract void exportGeneratedWav(TextField name,io.github.ilyaandreev05.eventsoundstudio.audio.SynthesisParameters parameters);
     protected abstract void editFragment(SoundLibrary.Entry entry);
     protected abstract void drawWave(Canvas canvas,PcmSound sound);
     protected abstract void drawWave(Canvas canvas,PcmSound sound,double selectionStart,double selectionEnd);

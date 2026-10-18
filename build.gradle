@@ -19,7 +19,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'io.github.ilyaandreev05.eventsoundstudio.EventSoundStudioApp'
+    mainClass = 'io.github.ilyaandreev05.eventsoundstudio.EventSoundStudioLauncher'
     applicationDefaultJvmArgs = ['--enable-native-access=javafx.graphics,ALL-UNNAMED', '--add-modules=jdk.httpserver']
 }
 test { useJUnitPlatform() }
@@ -67,12 +67,18 @@ tasks.register('packageDeb', Exec) {
         def extensionId = 'event-sound-studio-events@ilyaandreev05'
         def extensionDirectory = new File(extracted, "opt/eventsoundstudio/lib/gnome-shell/extensions/${extensionId}")
         extensionDirectory.mkdirs()
-        copy { from file('gnome/event-sound-studio-events'); include 'metadata.json', 'extension.js'; into extensionDirectory }
+        copy { from file('gnome/event-sound-studio-events'); include 'metadata.json', 'extension.js', 'notificationPolicy.js'; into extensionDirectory }
         def helperDirectory = new File(extracted, 'opt/eventsoundstudio/bin')
         helperDirectory.mkdirs()
         copy { from files('scripts/install-gnome-events.sh', 'scripts/uninstall-gnome-events.sh'); into helperDirectory }
         new File(helperDirectory, 'install-gnome-events.sh').setExecutable(true, false)
         new File(helperDirectory, 'uninstall-gnome-events.sh').setExecutable(true, false)
+        def userServiceDirectory = new File(extracted, 'opt/eventsoundstudio/lib/systemd/user')
+        userServiceDirectory.mkdirs()
+        copy { from file('src/main/systemd/user/eventsoundstudio.service'); into userServiceDirectory }
+        copy { from files('scripts/install-user-service.sh', 'scripts/uninstall-user-service.sh'); into helperDirectory }
+        new File(helperDirectory, 'install-user-service.sh').setExecutable(true, false)
+        new File(helperDirectory, 'uninstall-user-service.sh').setExecutable(true, false)
         def rebuilt = new File(dest, packageFile.name + '.rebuilt')
         runCommand(['dpkg-deb', '--build', '--root-owner-group', extracted.absolutePath, rebuilt.absolutePath])
         java.nio.file.Files.move(rebuilt.toPath(), packageFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)

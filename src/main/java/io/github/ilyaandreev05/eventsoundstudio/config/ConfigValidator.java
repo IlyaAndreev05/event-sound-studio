@@ -87,7 +87,8 @@ public final class ConfigValidator {
             if (b.containsKey("delay_ms")&&!integerInRange(b.get("delay_ms"),0,5000)) errors.add("bindings["+i+"].delay_ms must be an integer from 0 to 5000");
             if (b.containsKey("repeat")&&!integerInRange(b.get("repeat"),1,20)) errors.add("bindings["+i+"].repeat must be an integer from 1 to 20");
             if (b.containsKey("duration_ms")&&!integerInRange(b.get("duration_ms"),0,30_000)) errors.add("bindings["+i+"].duration_ms must be an integer from 0 to 30000");
-            for(String key:List.of("attack_ms","release_ms"))if(b.containsKey(key)&&!integerInRange(b.get(key),0,5000))errors.add("bindings["+i+"]."+key+" must be an integer from 0 to 5000");
+            for(String key:List.of("attack_ms","hold_ms","decay_ms","release_ms","anti_click_ms"))if(b.containsKey(key)&&!integerInRange(b.get(key),0,5000))errors.add("bindings["+i+"]."+key+" must be an integer from 0 to 5000");
+            if(b.containsKey("sustain_level"))volume(b.get("sustain_level"),"bindings["+i+"].sustain_level",errors);
             if (b.containsKey("remove_dc")&&!(b.get("remove_dc") instanceof Boolean))errors.add("bindings["+i+"].remove_dc must be boolean");
             if (!Set.of("mix","restart","ignore","queue").contains(b.get("overlap"))) errors.add("bindings["+i+"].overlap is unsupported");
             if (b.containsKey("output")&&(!(b.get("output") instanceof String output)||output.isBlank())) errors.add("bindings["+i+"].output must be a non-empty string");
