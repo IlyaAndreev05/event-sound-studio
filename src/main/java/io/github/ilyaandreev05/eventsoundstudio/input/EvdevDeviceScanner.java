@@ -42,5 +42,13 @@ public final class EvdevDeviceScanner {
     public enum Kind { KEYBOARD, MOUSE, UNKNOWN }
     public record Device(String id,Path devicePath,Kind kind,boolean readable,boolean temporaryIdentity) {
         public String label(){return id+(temporaryIdentity?" (temporary ID)":"")+(readable?"":" · permission required");}
+        public String fnSupport(){
+            try{
+                String bitmap=Files.readString(Path.of("/sys/class/input",devicePath.getFileName().toString(),"device/capabilities/key")).strip();
+                String[] words=bitmap.split("\\s+");int bits=Long.getLong("sun.arch.data.model",64L).intValue();
+                int word=words.length-1-464/bits;
+                return word>=0&&new java.math.BigInteger(words[word],16).testBit(464%bits)?"supported":"unsupported by device";
+            }catch(IOException|NumberFormatException ignored){return "capability unavailable";}
+        }
     }
 }

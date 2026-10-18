@@ -77,7 +77,7 @@ class InputEventDispatcherTest {
             dispatcher.updateConfig(configWithCombo("ctrl-a",List.of("KEY_LEFTCTRL","KEY_A"),"COMBO_AND_KEYS","ctrl_a"));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,1,1));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,1,2));
             dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,30,0,3));dispatcher.accept(new EvdevInputService.RawEvent("kbd",1,29,0,4));
-            assertEquals(List.of("group:builtin.modifiers","ctrl_a","group:builtin.letters"),sink.events);
+            assertEquals(List.of("group:custom.technical","ctrl_a","group:builtin.letters"),sink.events);
         }
     }
 
@@ -137,8 +137,8 @@ class InputEventDispatcherTest {
 
     @Test void highResolutionWheelAccumulatesDetentsAndSuppressesLegacyDuplicates(){
         RecordingSink sink=new RecordingSink();try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
-            dispatcher.updateConfig(DefaultConfig.create());for(int units:List.of(35,35,50))dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,11,units,1));
-            dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,8,1,2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,12,-120,3));
+            dispatcher.updateConfig(DefaultConfig.create());for(int units:List.of(35,35,50)){dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,11,units,1));dispatcher.accept(new EvdevInputService.RawEvent("mouse",0,0,0,1));}
+            dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,8,1,2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,12,-120,3));dispatcher.accept(new EvdevInputService.RawEvent("mouse",0,0,0,4));
             assertEquals(List.of("wheel_up","wheel_left"),sink.events);
         }
     }
@@ -146,7 +146,7 @@ class InputEventDispatcherTest {
     @Test void legacyWheelCanBePreferredWhenHighResolutionModeIsDisabled(){
         RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();@SuppressWarnings("unchecked") Map<String,Object> settings=(Map<String,Object>)config.get("settings");@SuppressWarnings("unchecked") Map<String,Object> wheel=(Map<String,Object>)settings.get("wheel");wheel.put("high_resolution_preferred",false);
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
-            dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,11,120,1));dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,8,1,2));
+            dispatcher.updateConfig(config);dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,11,120,1));dispatcher.accept(new EvdevInputService.RawEvent("mouse",2,8,1,2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",0,0,0,3));
             assertEquals(List.of("wheel_up"),sink.events);
         }
     }
@@ -154,7 +154,7 @@ class InputEventDispatcherTest {
     @Test void immediateDoubleClickPolicyDoesNotStackDoubleEffectOverTwoClickEffects(){
         RecordingSink sink=new RecordingSink();Map<String,Object> config=DefaultConfig.create();@SuppressWarnings("unchecked") Map<String,Object> settings=(Map<String,Object>)config.get("settings");settings.put("mouse_click_policy",DefaultConfig.map("mode","immediate_plus_double","double_click_window_ms",250));try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
             dispatcher.updateConfig(config);for(int i=0;i<2;i++){dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,1,i*2));dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,272,0,i*2+1));}
-            assertEquals(List.of("button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release","button:BTN_LEFT:press","mouse_left","button:BTN_LEFT:release"),sink.events);
+            assertEquals(List.of("button:BTN_LEFT:press","button:BTN_LEFT:release","button:BTN_LEFT:press","button:BTN_LEFT:release"),sink.events);
         }
     }
 

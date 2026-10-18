@@ -20,36 +20,41 @@ public final class SoundSynthesizer {
     public enum Waveform { SINE, SQUARE, TRIANGLE, NOISE, CHIRP, SWEEP, IMPULSE }
 
     public static float[] generate(Waveform waveform, double frequency, double amplitude, int durationMs, int repeats, double dcOffset) {
-        frequency = clamp(frequency, 20, 18_000); amplitude = clamp(amplitude, 0, 0.9); dcOffset = clamp(dcOffset, -0.1, 0.1);
-        durationMs = (int) clamp(durationMs, 10, 3000); repeats = (int) clamp(repeats, 1, 20);
-        int frames = SAMPLE_RATE * durationMs / 1000, gap = SAMPLE_RATE / 30;
-        float[] out = new float[(frames * repeats) + gap * Math.max(0, repeats - 1)];
-        Random random = new Random(0x455353L + waveform.ordinal() * 31L + durationMs);
-        for (int rep = 0; rep < repeats; rep++) {
-            int offset = rep * (frames + gap);
-            for (int frame = 0; frame < frames; frame++) {
-                double progress = frame / (double) Math.max(1, frames - 1);
-                double phaseFrequency = switch (waveform) {
-                    case CHIRP, SWEEP -> frequency + frequency * 2.0 * progress;
-                    default -> frequency;
-                };
-                double t = frame / (double) SAMPLE_RATE;
-                double phase = 2 * Math.PI * (waveform == Waveform.CHIRP || waveform == Waveform.SWEEP
-                        ? frequency * t + frequency * t * t / Math.max(durationMs / 1000.0, .001)
-                        : phaseFrequency * t);
-                double raw = switch (waveform) {
-                    case SINE, CHIRP, SWEEP -> Math.sin(phase);
-                    case SQUARE -> Math.sin(phase) >= 0 ? 1 : -1;
-                    case TRIANGLE -> 2 * Math.abs(2 * ((phase / (2 * Math.PI)) - Math.floor(phase / (2 * Math.PI) + .5))) - 1;
-                    case NOISE -> random.nextDouble(-1, 1);
-                    case IMPULSE -> frame < Math.max(1, frames / 12) ? 1 - frame / (double) Math.max(1, frames / 12) : Math.sin(phase) * Math.exp(-progress * 18);
-                };
-                double attack = Math.min(1, frame / Math.max(1, SAMPLE_RATE * .003));
-                double release = Math.min(1, (frames - frame) / (double) Math.max(1, SAMPLE_RATE * .008));
-                double envelope = attack * release * Math.exp(-progress * (waveform == Waveform.IMPULSE ? 4 : 2.5));
-                out[offset + frame] = (float) clamp((raw * envelope * amplitude) + dcOffset * envelope, -0.99, 0.99);
-            }
+        int duration = (int) clamp(durationMs, 10, 3000);
+        return generate(new SynthesisParameters(waveform, clamp(frequency, 20, 18_000),
+                clamp(amplitude, 0, .9), duration, (int) clamp(repeats, 1, 20),
+                clamp(dcOffset, -.1, .1), SoundEnvelope.forDuration(duration)));
+    }
+
+    /** Offline synthesis; callers on a UI thread should use SoundLibrary.previewGenerated. */
+    public static float[] generate(SynthesisParameters parameters) {
+        Waveform waveform = parameters.waveform();
+        double frequency = parameters.frequency();
+        int frames = SAMPLE_RATE * parameters.durationMs() / 1000, gap = SAMPLE_RATE / 30;
+        float[] hit = new float[frames];
+        Random random = new Random(0x455353L + waveform.ordinal() * 31L + parameters.durationMs());
+        for (int frame = 0; frame < frames; frame++) {
+            double t = frame / (double) SAMPLE_RATE;
+            double progress = frame / (double) Math.max(1, frames - 1);
+            // Cap the chirp end frequency below Nyquist, including high-frequency presets.
+            double endFrequency = Math.min(18_000, frequency * 3);
+            double phase = 2 * Math.PI * (frequency * t +
+                    ((waveform == Waveform.CHIRP || waveform == Waveform.SWEEP)
+                            ? (endFrequency - frequency) * t * t / (2 * parameters.durationMs() / 1000.0) : 0));
+            double raw = switch (waveform) {
+                case SINE, CHIRP, SWEEP -> Math.sin(phase);
+                case SQUARE -> Math.sin(phase) >= 0 ? 1 : -1;
+                case TRIANGLE -> 2 * Math.abs(2 * (phase / (2 * Math.PI) - Math.floor(phase / (2 * Math.PI) + .5))) - 1;
+                case NOISE -> random.nextDouble(-1, 1);
+                case IMPULSE -> Math.sin(phase) * Math.exp(-progress * 8);
+            };
+            double envelope = parameters.envelope().gain(frame, frames, SAMPLE_RATE);
+            hit[frame] = (float)((raw * parameters.amplitude() + parameters.dcOffset()) * envelope);
         }
+        PcmPreparation.finish(hit, 1, SAMPLE_RATE, true, 1, .9);
+        float[] out = new float[frames * parameters.repeats() + gap * (parameters.repeats() - 1)];
+        for (int repeat = 0; repeat < parameters.repeats(); repeat++)
+            System.arraycopy(hit, 0, out, repeat * (frames + gap), frames);
         return out;
     }
 
@@ -69,7 +74,7 @@ public final class SoundSynthesizer {
         wav.put(new byte[]{'R','I','F','F'}).putInt(36 + dataBytes).put(new byte[]{'W','A','V','E'});
         wav.put(new byte[]{'f','m','t',' '}).putInt(16).putShort((short)1).putShort((short)channels).putInt(sampleRate);
         wav.putInt(sampleRate * blockAlign).putShort((short)blockAlign).putShort((short)16).put(new byte[]{'d','a','t','a'}).putInt(dataBytes);
-        for (float sample : samples) wav.putShort((short) Math.round(clamp(sample, -1, 1) * Short.MAX_VALUE));
+        for (float sample : samples) wav.putShort((short) Math.round((Float.isFinite(sample) ? clamp(sample, -1, 1) : 0) * Short.MAX_VALUE));
         Files.write(path, wav.array());
     }
 

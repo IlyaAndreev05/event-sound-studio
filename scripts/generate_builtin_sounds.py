@@ -2,6 +2,7 @@
 """Generate original, short PCM WAV UI effects using simple deterministic synthesis."""
 from pathlib import Path
 import math, random, struct, wave
+import argparse
 
 OUT = Path(__file__).resolve().parents[1] / 'src/main/resources/assets/sounds'
 RATE = 48000
@@ -18,6 +19,10 @@ SOUNDS = [
     ('rubber-tap', 'sine', 400, .06), ('glass-tick', 'sine', 1750, .05), ('paper-tap', 'noise', 2800, .045),
     ('click-round', 'sine', 1000, .05), ('click-crisp', 'square', 1650, .035), ('muted-thud', 'sine', 125, .10),
     ('short-impulse', 'impulse', 900, .025), ('rise-sweep', 'sweep', 300, .18), ('fall-sweep', 'sweep-down', 1100, .18),
+    ('octine-function', 'sine', 155, .038),
+    ('octine-technical', 'sine', 205, .028), ('octine-super', 'chirp', 95, .065),
+    ('octine-delete', 'triangle', 82, .048),
+    ('octine-workspace', 'sweep', 65, .120), ('octine-notification', 'sine', 230, .085),
 ]
 
 def sample(kind, i, total, hz, rng):
@@ -39,14 +44,20 @@ def sample(kind, i, total, hz, rng):
     envelope = attack * decay * release
     return value * envelope
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--only', nargs='+', help='Generate only the named assets; leave all others untouched.')
+args = parser.parse_args()
+selected = [sound for sound in SOUNDS if not args.only or sound[0] in args.only]
+if args.only and set(args.only) - {sound[0] for sound in SOUNDS}:
+    parser.error('Unknown sound ID in --only')
 OUT.mkdir(parents=True, exist_ok=True)
-for name, kind, hz, secs in SOUNDS:
+for name, kind, hz, secs in selected:
     rng = random.Random(name)
     total = max(1, round(RATE*secs))
     values = [sample(kind, i, total, hz, rng) for i in range(total)]
     peak = max(map(abs, values)) or 1
-    scale = .38 / peak
+    scale = (.92 if name.startswith('octine-') else .38) / peak
     pcm = b''.join(struct.pack('<h', int(max(-1,min(1,v*scale))*32767)) for v in values)
     with wave.open(str(OUT / f'{name}.wav'), 'wb') as f:
         f.setnchannels(1); f.setsampwidth(2); f.setframerate(RATE); f.writeframes(pcm)
-print(f'Generated {len(SOUNDS)} original mono PCM WAV assets in {OUT}')
+print(f'Generated {len(selected)} original mono PCM WAV assets in {OUT}')

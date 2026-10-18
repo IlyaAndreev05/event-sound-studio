@@ -26,21 +26,36 @@ final class PipeWireEventOutput {
     static List<String> command() {
         String properties = "{\"application.id\":\"" + APPLICATION_ID
                 + "\",\"application.name\":\"Event Sound Studio\",\"media.name\":\"Event effects\","
-                + "\"target.object\":\"" + NODE_NAME + "\",\"node.dont-fallback\":true,\"node.dont-reconnect\":true}";
-        return List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME,
+                + "\"node.name\":\"eventsoundstudio_pcm\",\"target.object\":\"" + NODE_NAME + "\",\"node.dont-fallback\":true,\"node.dont-reconnect\":true}";
+        return List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME, "--volume=1", "--latency=512",
                 "--rate", "48000", "--channels", "2", "--channel-map", "FL,FR",
                 "--format", "s16", "--properties=" + properties, "-");
     }
 
     static SourceDataLine openLine(AudioFormat format) throws IOException {
-        if (format.getSampleRate() != 48_000 || format.getSampleSizeInBits() != 16 || format.getChannels() != 2)
-            throw new IOException("Audio Matrix event output supports only 48 kHz signed 16-bit stereo PCM");
+        if (format.getSampleRate() != 48_000 || format.getSampleSizeInBits() != 16 || format.getChannels() != 2
+                || !AudioFormat.Encoding.PCM_SIGNED.equals(format.getEncoding()) || format.isBigEndian() || format.getFrameSize() != 4)
+            throw new IOException("Audio Matrix event output supports only 48 kHz signed little-endian 16-bit stereo PCM");
         if (!available()) throw new IOException("pw-cat is unavailable; event audio will remain stopped");
+        final int sink;
+        try { sink = PipeWireEventTarget.requireUniqueSink(); }
+        catch (Exception error) { throw new IOException(error.getMessage(), error); }
         Process process = new ProcessBuilder(command())
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.DISCARD)
                 .start();
         OutputStream input = process.getOutputStream();
+        try {
+            input.write(new byte[1024]); input.flush();
+            boolean linked = false;
+            for (int attempt = 0; attempt < 8 && process.isAlive(); attempt++) {
+                if (PipeWireEventTarget.linked(sink)) { linked = true; break; }
+                Thread.sleep(100);
+            }
+            if (!linked) throw new IOException("Explicit audiomatrix_events target is not linked; event output remains silent");
+            try { PipeWireEventTarget.normalizeLevel(); }
+            catch (Exception levelError) { /* keep the persistent stream; its last saved gain may still apply */ }
+        } catch (Exception error) { close(process, input); throw new IOException(error.getMessage(), error); }
         long[] written = {0};
         return (SourceDataLine) Proxy.newProxyInstance(SourceDataLine.class.getClassLoader(),
                 new Class<?>[]{SourceDataLine.class}, (proxy, method, args) -> switch (method.getName()) {
@@ -78,6 +93,8 @@ final class PipeWireEventOutput {
     }
 
     private static void close(Process process, OutputStream input) {
+        // Terminate first: closing a pipe while another thread is blocked in write can wait on its monitor.
+        if (process.isAlive()) process.destroyForcibly();
         try { input.close(); } catch (IOException ignored) {}
         if (!process.isAlive()) return;
         try {

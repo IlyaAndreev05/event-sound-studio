@@ -30,15 +30,21 @@ public final class AudioEffects {
     /** Prepares binding-local duration, DC correction, EQ, and fades without modifying the source WAV buffer. */
     public static PcmSound applyBindingEffects(PcmSound source,Map<String,Object> settings){
         if(source==null)return null;
-        int durationMs=integer(settings.get("duration_ms"),0),attackMs=integer(settings.get("attack_ms"),0),releaseMs=integer(settings.get("release_ms"),0);
+        if(settings==null)settings=Map.of();
+        int durationMs=integer(settings.get("duration_ms"),0);
+        SoundEnvelope envelope=new SoundEnvelope(value(settings,"attack_ms",0),value(settings,"hold_ms",0),
+                value(settings,"decay_ms",0),value(settings,"sustain_level",1),value(settings,"release_ms",0));
+        double fadeMs=value(settings,"anti_click_ms",1);
+        if(fadeMs<0||fadeMs>100)throw new IllegalArgumentException("Anti-click fade must be between 0 and 100 ms");
         boolean removeDc=Boolean.TRUE.equals(settings.get("remove_dc"));
         PcmSound rendered=durationMs>0?resampleDuration(source,durationMs):source;
         rendered=applyEq(rendered,map(settings.get("eq")));
-        if(!removeDc&&attackMs==0&&releaseMs==0)return rendered;
         float[] samples=rendered.samples().clone();int channels=rendered.channels(),frames=rendered.frames();
-        if(removeDc&&frames>0){double[] means=new double[channels];for(int frame=0;frame<frames;frame++)for(int channel=0;channel<channels;channel++)means[channel]+=samples[frame*channels+channel];for(int channel=0;channel<channels;channel++)means[channel]/=frames;for(int frame=0;frame<frames;frame++)for(int channel=0;channel<channels;channel++)samples[frame*channels+channel]-=(float)means[channel];}
-        int attackFrames=Math.min(frames,(int)Math.round(attackMs*rendered.sampleRate()/1000.0)),releaseFrames=Math.min(frames,(int)Math.round(releaseMs*rendered.sampleRate()/1000.0));
-        if(attackFrames>0||releaseFrames>0)for(int frame=0;frame<frames;frame++){double gain=1;if(attackFrames>1&&frame<attackFrames)gain=Math.min(gain,frame/(double)(attackFrames-1));if(releaseFrames>1&&frame>=frames-releaseFrames)gain=Math.min(gain,(frames-1-frame)/(double)(releaseFrames-1));for(int channel=0;channel<channels;channel++)samples[frame*channels+channel]*=(float)gain;}
+        for(int frame=0;frame<frames;frame++){
+            double gain=envelope.gain(frame,frames,rendered.sampleRate());
+            for(int channel=0;channel<channels;channel++)samples[frame*channels+channel]*=(float)gain;
+        }
+        PcmPreparation.finish(samples,channels,rendered.sampleRate(),removeDc,fadeMs,.99);
         return new PcmSound(source.id()+"-binding",source.name(),samples,channels,rendered.sampleRate());
     }
 
@@ -75,6 +81,11 @@ public final class AudioEffects {
     private static String string(Object value){return value instanceof String s?s:"";}
     private static double number(Object value){return value instanceof Number n?n.doubleValue():Double.NaN;}
     private static int integer(Object value,int fallback){return value instanceof Number n?n.intValue():fallback;}
+    private static double value(Map<String,Object> settings,String key,double fallback){
+        Object raw=settings.get(key);if(raw==null)return fallback;
+        if(!(raw instanceof Number n)||!Double.isFinite(n.doubleValue()))throw new IllegalArgumentException("Invalid "+key);
+        return n.doubleValue();
+    }
     @SuppressWarnings("unchecked") private static Map<String,Object> map(Object value){return value instanceof Map<?,?> m?(Map<String,Object>)m:Map.of();}
     public record Coefficients(double b0,double b1,double b2,double a1,double a2){}
 }

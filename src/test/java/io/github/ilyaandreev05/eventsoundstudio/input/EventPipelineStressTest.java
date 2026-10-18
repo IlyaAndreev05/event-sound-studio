@@ -38,6 +38,7 @@ class EventPipelineStressTest {
                     dispatcher.accept(new EvdevInputService.RawEvent("stress-kbd",1,30,1,i*3L));
                     dispatcher.accept(new EvdevInputService.RawEvent("stress-kbd",1,30,0,i*3L+1));
                     dispatcher.accept(new EvdevInputService.RawEvent("stress-mouse",2,11,120,i*3L+2));
+                    dispatcher.accept(new EvdevInputService.RawEvent("stress-mouse",0,0,0,i*3L+2));
                 }
                 config.put("active_profile","quiet");router.update(config);dispatcher.updateConfig(config);
                 assertEquals(0,dispatcher.pressedKeyCount("stress-kbd"),"all synthetic key presses must be released");

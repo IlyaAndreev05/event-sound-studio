@@ -16,9 +16,10 @@ public final class EventRouter {
     private final AudioEngine engine;
     private final SoundLibrary library;
     private final AtomicReference<RoutingState> state=new AtomicReference<>(new RoutingState(List.of(),Map.of(),Set.of(),Map.of(),Map.of(),Map.of(),"desk",.65,false,"system_default"));
-    private final Map<String,Long> lastTriggerNanos=new ConcurrentHashMap<>();
+    private final Map<String,java.util.concurrent.atomic.AtomicLong> lastTriggerNanos=new ConcurrentHashMap<>();
     private final Map<String,ProcessedCache> processedCache=new ConcurrentHashMap<>();
-    private volatile long droppedCooldowns;
+    private final java.util.concurrent.atomic.AtomicLong droppedCooldowns=new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong bindingMatches=new java.util.concurrent.atomic.AtomicLong(), acceptedRequests=new java.util.concurrent.atomic.AtomicLong(), missingSounds=new java.util.concurrent.atomic.AtomicLong();
     public EventRouter(AudioEngine engine,SoundLibrary library){this.engine=engine;this.library=library;}
     public void update(Map<String,Object> config){
         Map<String,Object> settings=map(config.get("settings"));
@@ -38,11 +39,13 @@ public final class EventRouter {
         List<Binding> bindings=new ArrayList<>();for(Map<String,Object> b:listMaps(config.get("bindings"))){
             String id=String.valueOf(b.get("id"));String soundId=String.valueOf(b.get("sound"));SoundLibrary.Entry entry=library.get(soundId);
             PcmSound source=entry!=null&&entry.ready()?entry.pcm():null;Map<String,Object> eq=map(b.get("eq"));Map<String,Object> effects=new HashMap<>();effects.put("eq",eq);effects.put("duration_ms",intNum(b.get("duration_ms"),0));effects.put("attack_ms",intNum(b.get("attack_ms"),0));effects.put("release_ms",intNum(b.get("release_ms"),0));effects.put("remove_dc",bool(b.get("remove_dc"),false));
+            effects.put("hold_ms",intNum(b.get("hold_ms"),0));effects.put("decay_ms",intNum(b.get("decay_ms"),0));effects.put("sustain_level",num(b.get("sustain_level"),1));effects.put("anti_click_ms",num(b.get("anti_click_ms"),1));
             PcmSound rendered=source==null?null:processedSound(id,source,effects);
             int filterCount=eq.get("filters") instanceof List<?> filters?filters.size():0;
             bindings.add(new Binding(id,String.valueOf(b.get("event")),soundId,bool(b.get("enabled"),false),activeProfile.enabledBindingIds().contains(id),intNum(b.get("priority"),0),num(b.get("volume"),1),intNum(b.get("cooldown_ms"),0),String.valueOf(b.getOrDefault("overlap","mix")),num(b.get("pan"),0),intNum(b.get("delay_ms"),0),intNum(b.get("repeat"),1),String.valueOf(b.getOrDefault("output","profile_default")),intNum(b.get("duration_ms"),0),intNum(b.get("attack_ms"),0),intNum(b.get("release_ms"),0),bool(b.get("remove_dc"),false),rendered,bool(eq.get("enabled"),false),filterCount));
         }
         Set<String> liveBindingIds=bindings.stream().map(Binding::id).collect(java.util.stream.Collectors.toSet());processedCache.keySet().retainAll(liveBindingIds);
+        bindings.forEach(binding->lastTriggerNanos.computeIfAbsent(binding.id(),ignored->new java.util.concurrent.atomic.AtomicLong()));
         bindings.sort(Comparator.comparingInt(Binding::priority).reversed());
         state.set(new RoutingState(List.copyOf(bindings),Map.copyOf(soundVolumes),activeProfile.enabledBindingIds(),Map.copyOf(profiles),Map.copyOf(sourceProfiles),Map.copyOf(eventSources),activeProfileId,activeProfile.volume(),mute,previewOutput));
         // Event voices are explicitly targeted below; the engine's default is reserved for previews and the generator.
@@ -59,12 +62,11 @@ public final class EventRouter {
         RoutingState current=state.get();ProfileSelection profile=profileForEvent(current,eventId);if(profile==null)return false;boolean played=false;
         for(Binding binding:current.bindings()){
             if(!binding.enabled()||!profile.enabledBindingIds().contains(binding.id())||!binding.event().equals(eventId))continue;
-            long now=System.nanoTime();long previous=lastTriggerNanos.getOrDefault(binding.id(),0L);
-            if(now-previous<binding.cooldownMs()*1_000_000L){droppedCooldowns++;continue;}
-            if(binding.renderedSound()==null)continue;
-            lastTriggerNanos.put(binding.id(),now);
+            bindingMatches.incrementAndGet();
+            if(binding.renderedSound()==null){missingSounds.incrementAndGet();continue;}
+            if(!preview&&!claimCooldown(binding)){droppedCooldowns.incrementAndGet();continue;}
             String output=preview?current.output():MixerOutputSelector.AUDIO_MATRIX_EVENTS;double gain=binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume();
-            engine.play(binding.renderedSound(),gain,binding.pan(),binding.delayMs(),binding.repeat(),binding.overlap(),binding.id(),output);played=true;
+            if(engine.tryPlay(binding.renderedSound(),gain,binding.pan(),binding.delayMs(),binding.repeat(),binding.overlap(),preview?"preview:"+binding.id():binding.id(),output)){acceptedRequests.incrementAndGet();played=true;}
         }
         return played;
     }
@@ -75,13 +77,19 @@ public final class EventRouter {
     public boolean playBinding(String bindingId){
         RoutingState current=state.get();Binding binding=current.bindings().stream().filter(item->item.id().equals(bindingId)).findFirst().orElse(null);if(binding==null||binding.renderedSound()==null)return false;
         ProfileSelection profile=profileForEvent(current,binding.event());if(profile==null)return false;String output=current.output();
-        engine.play(binding.renderedSound(),binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume(),binding.pan(),binding.delayMs(),binding.repeat(),"mix","preview:"+binding.id(),output);return true;
+        return engine.tryPlay(binding.renderedSound(),binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume(),binding.pan(),binding.delayMs(),binding.repeat(),"mix","preview:"+binding.id(),output);
     }
     public boolean playSound(String soundId){
         RoutingState current=state.get();SoundLibrary.Entry entry=library.get(soundId);if(entry==null||!entry.ready())return false;
-        engine.play(entry.pcm(),current.soundVolumes().getOrDefault(soundId,1.0)*current.masterVolume(),0,0,1,"mix","preview:sound:"+soundId,current.output());return true;
+        return engine.tryPlay(entry.pcm(),current.soundVolumes().getOrDefault(soundId,1.0)*current.masterVolume(),0,0,1,"mix","preview:sound:"+soundId,current.output());
     }
-    public long droppedCooldowns(){return droppedCooldowns;}
+    public long droppedCooldowns(){return droppedCooldowns.get();}
+    public Diagnostics diagnostics(){return new Diagnostics(bindingMatches.get(),acceptedRequests.get(),missingSounds.get(),droppedCooldowns.get());}
+    public record Diagnostics(long bindingMatches,long acceptedRequests,long missingSounds,long droppedCooldowns){}
+    private boolean claimCooldown(Binding binding){
+        java.util.concurrent.atomic.AtomicLong clock=lastTriggerNanos.get(binding.id());
+        long previous,now;do{previous=clock.get();now=System.nanoTime();if(previous!=0&&now-previous<binding.cooldownMs()*1_000_000L)return false;}while(!clock.compareAndSet(previous,now));return true;
+    }
     public double masterVolume(){return state.get().masterVolume();}
     public String activeOutput(){return state.get().output();}
     public List<BindingView> bindings(){return state.get().bindings().stream().map(b->new BindingView(b.id(),b.event(),b.sound(),b.enabled(),b.profileEnabled(),b.priority(),b.volume(),b.pan(),b.delayMs(),b.repeat(),b.overlap(),b.output(),b.durationMs(),b.attackMs(),b.releaseMs(),b.removeDc(),b.eqEnabled(),b.eqFilterCount())).toList();}

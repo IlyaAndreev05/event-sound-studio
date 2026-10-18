@@ -75,7 +75,7 @@ class AudioEngineOutputTest {
             int frames=8_000;float[] samples=new float[frames*2];for(int frame=0;frame<frames;frame++){float value=(float)(.5*Math.sin(2*Math.PI*440*frame/SoundSynthesizer.SAMPLE_RATE));samples[frame*2]=value;samples[frame*2+1]=value;}
             engine.play(new PcmSound("test","Test",samples,2,SoundSynthesizer.SAMPLE_RATE),1,0,0,1,"mix","test-binding","binding-sink");
             assertTrue(routedAudio.await(2,TimeUnit.SECONDS),"the selected binding output should receive non-silent PCM");
-            assertTrue(audibleWrites.get("binding-sink").get()>0);assertEquals(0,audibleWrites.get("profile-sink").get());
+            assertTrue(audibleWrites.get("binding-sink").get()>0);assertEquals(0,audibleWrites.getOrDefault("profile-sink",new AtomicInteger()).get());
         }finally{engine.close();}
     }
 
