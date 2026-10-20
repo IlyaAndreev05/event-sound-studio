@@ -62,6 +62,16 @@ class InputEventDispatcherTest {
         }
     }
 
+    @Test void rightClickDispatchesOneBoundPressCueAndNoUnboundReleaseCue(){
+        BoundRecordingSink sink=new BoundRecordingSink(Set.of("button:BTN_RIGHT:press"));
+        try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
+            dispatcher.updateConfig(DefaultConfig.create());
+            dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,273,1,1));
+            dispatcher.accept(new EvdevInputService.RawEvent("mouse",1,273,0,2));
+            assertEquals(List.of("button:BTN_RIGHT:press"),sink.events);
+        }
+    }
+
     @Test void winAOnlyComboDoesNotAlsoTriggerTheWinOrLetterGroups(){
         RecordingSink sink=new RecordingSink();sink.disabled.add("key:KEY_LEFTMETA:press");Map<String,Object> config=configWithCombo("win-a",List.of("KEY_LEFTMETA","KEY_A"),"ONLY_COMBO","win_a");
         try(InputEventDispatcher dispatcher=new InputEventDispatcher(sink)){
@@ -200,6 +210,9 @@ class InputEventDispatcherTest {
     }
     private static final class RecordingSink implements InputEventDispatcher.EventSink{
         final List<String> events=new CopyOnWriteArrayList<>();final Set<String> disabled=new HashSet<>();public boolean hasEnabledBinding(String event){return !disabled.contains(event);}public boolean trigger(String event){events.add(event);return true;}
+    }
+    private static final class BoundRecordingSink implements InputEventDispatcher.EventSink{
+        final Set<String> bound;final List<String> events=new CopyOnWriteArrayList<>();BoundRecordingSink(Set<String> bound){this.bound=bound;}public boolean hasEnabledBinding(String event){return bound.contains(event);}public boolean trigger(String event){if(!hasEnabledBinding(event))return false;events.add(event);return true;}
     }
 
     @SuppressWarnings("unchecked")

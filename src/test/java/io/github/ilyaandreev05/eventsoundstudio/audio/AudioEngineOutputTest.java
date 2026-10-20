@@ -56,7 +56,8 @@ class AudioEngineOutputTest {
                 .findFirst().orElseThrow();
         assertTrue(properties.contains("\"target.object\":\"audiomatrix_events\""));
         assertTrue(properties.contains("\"node.dont-fallback\":true"));
-        assertTrue(properties.contains("\"node.dont-reconnect\":true"));
+        assertTrue(properties.contains("\"node.dont-reconnect\":false"),"the event stream should reconnect when its named sink returns");
+        assertTrue(properties.contains("\"node.dont-fallback\":true"),"reconnect must never fall back to a physical output");
         assertFalse(command.contains("system_default"));
     }
 

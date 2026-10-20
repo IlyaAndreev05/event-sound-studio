@@ -26,7 +26,7 @@ final class PipeWireEventOutput {
     static List<String> command() {
         String properties = "{\"application.id\":\"" + APPLICATION_ID
                 + "\",\"application.name\":\"Event Sound Studio\",\"media.name\":\"Event effects\","
-                + "\"node.name\":\"eventsoundstudio_pcm\",\"target.object\":\"" + NODE_NAME + "\",\"node.dont-fallback\":true,\"node.dont-reconnect\":true}";
+                + "\"node.name\":\"eventsoundstudio_pcm\",\"target.object\":\"" + NODE_NAME + "\",\"node.dont-fallback\":true,\"node.dont-reconnect\":false}";
         return List.of("pw-cat", "--playback", "--raw", "--target", NODE_NAME, "--volume=1", "--latency=256",
                 "--rate", "48000", "--channels", "2", "--channel-map", "FL,FR",
                 "--format", "s16", "--properties=" + properties, "-");

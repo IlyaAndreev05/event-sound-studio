@@ -65,7 +65,7 @@ public final class EventRouter {
             bindingMatches.incrementAndGet();
             if(binding.renderedSound()==null){missingSounds.incrementAndGet();continue;}
             if(!preview&&!claimCooldown(binding)){droppedCooldowns.incrementAndGet();continue;}
-            String output=preview?current.output():MixerOutputSelector.AUDIO_MATRIX_EVENTS;double gain=binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume();
+            String output=preview?current.output():MixerOutputSelector.AUDIO_MATRIX_EVENTS;double gain=linearGain(binding.volume(),current.soundVolumes().getOrDefault(binding.sound(),1.0),profile.volume());
             if(engine.tryPlay(binding.renderedSound(),gain,binding.pan(),binding.delayMs(),binding.repeat(),binding.overlap(),preview?"preview:"+binding.id():binding.id(),output)){acceptedRequests.incrementAndGet();played=true;}
         }
         return played;
@@ -77,7 +77,7 @@ public final class EventRouter {
     public boolean playBinding(String bindingId){
         RoutingState current=state.get();Binding binding=current.bindings().stream().filter(item->item.id().equals(bindingId)).findFirst().orElse(null);if(binding==null||binding.renderedSound()==null)return false;
         ProfileSelection profile=profileForEvent(current,binding.event());if(profile==null)return false;String output=current.output();
-        return engine.tryPlay(binding.renderedSound(),binding.volume()*current.soundVolumes().getOrDefault(binding.sound(),1.0)*profile.volume(),binding.pan(),binding.delayMs(),binding.repeat(),"mix","preview:"+binding.id(),output);
+        return engine.tryPlay(binding.renderedSound(),linearGain(binding.volume(),current.soundVolumes().getOrDefault(binding.sound(),1.0),profile.volume()),binding.pan(),binding.delayMs(),binding.repeat(),"mix","preview:"+binding.id(),output);
     }
     public boolean playSound(String soundId){
         RoutingState current=state.get();SoundLibrary.Entry entry=library.get(soundId);if(entry==null||!entry.ready())return false;
@@ -85,6 +85,8 @@ public final class EventRouter {
     }
     public long droppedCooldowns(){return droppedCooldowns.get();}
     public Diagnostics diagnostics(){return new Diagnostics(bindingMatches.get(),acceptedRequests.get(),missingSounds.get(),droppedCooldowns.get());}
+    /** Binding, sound, and profile levels are already linear PCM coefficients. */
+    static double linearGain(double bindingVolume,double soundVolume,double profileVolume){return bindingVolume*soundVolume*profileVolume;}
     public record Diagnostics(long bindingMatches,long acceptedRequests,long missingSounds,long droppedCooldowns){}
     private boolean claimCooldown(Binding binding){
         java.util.concurrent.atomic.AtomicLong clock=lastTriggerNanos.get(binding.id());
