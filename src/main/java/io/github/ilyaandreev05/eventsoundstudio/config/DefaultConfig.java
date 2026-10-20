@@ -11,7 +11,7 @@ public final class DefaultConfig {
     public static final Map<String, String> BUILTIN_NAMES = names();
 
     public static Map<String, Object> create() {
-        Map<String, Object> root = map("schema_version", 5, "app", "event-sound-studio", "active_profile", "desk",
+        Map<String, Object> root = map("schema_version", 6, "app", "event-sound-studio", "active_profile", "desk",
                 "graph_routes", new ArrayList<>(), "route_groups", new ArrayList<>(), "saved_copies", new ArrayList<>());
         root.put("source_profiles", map());
         root.put("settings", map("language", "ru", "theme", "system", "master_volume", 0.65, "master_mute", false,
@@ -59,7 +59,7 @@ public final class DefaultConfig {
         bindings.add(binding("modifiers-default", "group:builtin.modifiers", "octine-click", true, 30, 0.15, 0, "mix"));
         bindings.add(binding("enter-key", "enter_press", "octine-click", true, 30, 0.07, 0, "mix"));
         bindings.add(binding("mouse-click", "mouse_left", "octine-click", true, 20, 1.0, 15, "mix"));
-        bindings.add(binding("mouse-right-click", "button:BTN_RIGHT:press", "octine-right-click", true, 20, 1.0, 15, "mix"));
+        bindings.add(binding("mouse-right-click", "button:BTN_RIGHT:press", "octine-right-click-single", true, 20, 1.0, 15, "mix"));
         bindings.add(binding("mouse-middle-click", "button:BTN_MIDDLE:press", "octine-click", true, 20, 1.0, 15, "mix"));
         bindings.add(binding("mouse-double-click", "mouse_double_left", "octine-double-click", false, 80, 0.7, 100, "mix"));
         bindings.add(binding("wheel-up", "wheel_up", "octine-scroll", true, 20, 1.0, 10, "restart"));
@@ -138,6 +138,7 @@ public final class DefaultConfig {
                 new SoundAsset("octine-double-click", "Двойной тактильный клик", List.of("тактильный", "мышь", "низкий")),
                 new SoundAsset("octine-scroll", "Тактильное колесо", List.of("тактильный", "колесо", "низкий")),
                 new SoundAsset("octine-right-click", "Тактильный правый клик", List.of("тактильный", "мышь", "низкий")),
+                new SoundAsset("octine-right-click-single", "Тактильный правый клик (один импульс)", List.of("тактильный", "мышь", "низкий")),
                 new SoundAsset("octine-enter", "Тактильный Enter", List.of("тактильный", "клавиатура", "низкий")),
                 new SoundAsset("octine-system", "Системная тактильная вибрация", List.of("тактильный", "система", "низкий")),
                 new SoundAsset("octine-reminder", "Длинный тактильный сигнал", List.of("тактильный", "система", "низкий")),

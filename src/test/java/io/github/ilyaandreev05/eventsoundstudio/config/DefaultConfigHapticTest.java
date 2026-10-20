@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.sound.sampled.AudioSystem;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ class DefaultConfigHapticTest {
         assertEquals("octine-click",bindings.get("mouse-click").get("sound"));
         assertEquals(1.0,bindings.get("mouse-click").get("volume"));
         assertEquals(60,bindings.get("mouse-click").get("duration_ms"));
-        assertEquals("octine-right-click",bindings.get("mouse-right-click").get("sound"));
+        assertEquals("octine-right-click-single",bindings.get("mouse-right-click").get("sound"));
         assertEquals("octine-scroll",bindings.get("wheel-up").get("sound"));
         assertFalse(Boolean.TRUE.equals(bindings.get("mouse-double-click").get("enabled")));
         Map<String,Object> desk=maps(config.get("profiles")).stream()
@@ -38,7 +39,7 @@ class DefaultConfigHapticTest {
     }
 
     @Test void bundledOctineEffectsAreNormalizedLowFrequencyPulses() throws Exception {
-        for(String sound:List.of("octine-click","octine-keypress","octine-function","octine-double-click","octine-scroll","octine-right-click","octine-enter","octine-system","octine-reminder")){
+        for(String sound:List.of("octine-click","octine-keypress","octine-function","octine-double-click","octine-scroll","octine-right-click-single","octine-enter","octine-system","octine-reminder")){
             try(InputStream resource=getClass().getResourceAsStream("/assets/sounds/"+sound+".wav")){
                 assertNotNull(resource,sound);
                 try(var audio=AudioSystem.getAudioInputStream(resource)){
@@ -55,6 +56,35 @@ class DefaultConfigHapticTest {
                 }
             }
         }
+    }
+
+    @Test void singleRightClickKeepsTheOriginalFirstPulseAndOmitsTheSecond() throws Exception {
+        byte[] original=pcm("/assets/sounds/archive/0.2.2/octine-right-click.wav");
+        byte[] legacy=pcm("/assets/sounds/octine-right-click.wav");
+        byte[] single=pcm("/assets/sounds/octine-right-click-single.wav");
+
+        assertArrayEquals(legacy,original,"the archived WAV is an unchanged copy of the legacy resource");
+        assertEquals(60,1000L*single.length/(48_000L*2));
+        assertArrayEquals(Arrays.copyOf(legacy,single.length),single,"the first pulse is preserved byte-for-byte");
+        assertTrue(peak(legacy,66,84)>.35,"legacy asset contains the second pulse");
+        assertEquals(0,peak(single,52,60),"the new single-click cue ends in silence before the old second pulse");
+        assertEquals(1.0,((Number)maps(DefaultConfig.create().get("sounds")).stream().filter(s->"octine-right-click-single".equals(s.get("id"))).findFirst().orElseThrow().get("volume")).doubleValue());
+    }
+
+    private static byte[] pcm(String resource) throws Exception {
+        try(InputStream input=DefaultConfigHapticTest.class.getResourceAsStream(resource)){
+            assertNotNull(input,resource);
+            try(var audio=AudioSystem.getAudioInputStream(input)){
+                assertEquals(48_000,(int)audio.getFormat().getSampleRate());assertEquals(1,audio.getFormat().getChannels());assertEquals(16,audio.getFormat().getSampleSizeInBits());
+                return audio.readAllBytes();
+            }
+        }
+    }
+
+    private static double peak(byte[] pcm,int fromMs,int toMs){
+        int first=fromMs*48_000/1000,last=Math.min(pcm.length/2,toMs*48_000/1000);double peak=0;
+        for(int frame=first;frame<last;frame++){int sample=(short)((pcm[frame*2]&255)|(pcm[frame*2+1]<<8));peak=Math.max(peak,Math.abs(sample)/32768.0);}
+        return peak;
     }
 
     @SuppressWarnings("unchecked")

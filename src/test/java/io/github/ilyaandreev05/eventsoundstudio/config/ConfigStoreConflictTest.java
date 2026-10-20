@@ -21,7 +21,7 @@ class ConfigStoreConflictTest {
         Map<String,Object> old=DefaultConfig.create();old.put("schema_version",1);
         byte[] original=new ObjectMapper(new YAMLFactory()).writeValueAsBytes(old);Files.write(legacy,original);
         try(ConfigStore store=new ConfigStore(json,legacy)){
-            assertEquals(5,((Number)store.snapshot().get("schema_version")).intValue());
+            assertEquals(6,((Number)store.snapshot().get("schema_version")).intValue());
             assertTrue(Files.readString(json).startsWith("{"));
             assertArrayEquals(original,Files.readAllBytes(temp.resolve("config.yaml.before-json")));
             Map<String,Object> saved=store.snapshot();settings(saved).put("master_volume",.41);store.save(saved,store.versionedSnapshot().revision());

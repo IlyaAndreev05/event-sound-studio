@@ -1,16 +1,22 @@
 package io.github.ilyaandreev05.eventsoundstudio.config;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /** Small, lossless fixes for known persisted-default mistakes. */
 public final class ConfigMigrator {
-    public static final int CURRENT_SCHEMA_VERSION = 5;
+    public static final int CURRENT_SCHEMA_VERSION = 6;
     private ConfigMigrator(){}
 
     /** Upgrades persisted settings and archives while keeping event audio fail-closed. */
     public static boolean migrateToCurrentSchema(Map<String,Object> root, boolean addDefaultBindings) {
+        return migrateToCurrentSchema(root, addDefaultBindings, null);
+    }
+
+    /** App-store migrations may inspect the installed built-in asset before replacing its default binding. */
+    public static boolean migrateToCurrentSchema(Map<String,Object> root, boolean addDefaultBindings, Path dataDirectory) {
         int version = root.get("schema_version") instanceof Number n ? n.intValue() : -1;
         if (version < 1 || version > CURRENT_SCHEMA_VERSION) return false;
         boolean changed = false;
@@ -38,6 +44,12 @@ public final class ConfigMigrator {
         if (version < 5) {
             if (addDefaultBindings) EventPresetMigration.apply(root);
             root.put("schema_version", 5);
+            changed = true;
+            version = 5;
+        }
+        if (version < 6) {
+            if (addDefaultBindings) changed |= StandardClickMigration.apply(root, dataDirectory);
+            root.put("schema_version", 6);
             changed = true;
         }
         return changed;

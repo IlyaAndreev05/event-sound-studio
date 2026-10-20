@@ -92,9 +92,9 @@ public final class ConfigStore implements AutoCloseable {
         catch(Exception e){diagnostic="Config could not be parsed: "+e.getMessage();throw new ConfigValidationException(List.of(diagnostic));}
         int sourceVersion=parsed.get("schema_version") instanceof Number n?n.intValue():-1;
         boolean migrated=sourceVersion>=1&&sourceVersion<ConfigMigrator.CURRENT_SCHEMA_VERSION
-                &&ConfigMigrator.migrateToCurrentSchema(parsed,true);
+                &&ConfigMigrator.migrateToCurrentSchema(parsed,true,directory);
         List<String> errors=ConfigValidator.validate(parsed);if(!errors.isEmpty()){diagnostic=String.join("; ",errors);throw new ConfigValidationException(errors);}
-        if(migrated){bytes=mapper.writeValueAsBytes(parsed);atomicWrite(bytes);}
+        if(migrated){createMigrationBackup(bytes);bytes=mapper.writeValueAsBytes(parsed);atomicWrite(bytes);}
         current=deep(parsed);fingerprint=hash(bytes);diagnostic="";if(notify)publish(new Event(current,"External configuration reloaded"));
     }
     private void startWatcher(){watcherExecutor.submit(()->{
@@ -115,13 +115,26 @@ public final class ConfigStore implements AutoCloseable {
             try{Files.move(temp,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException e){throw new IOException("Config filesystem does not support atomic replacement",e);}
         }finally{Files.deleteIfExists(temp);}
     }
+    private void createMigrationBackup(byte[] original)throws IOException{
+        if(!hash(Files.readAllBytes(file)).equals(hash(original)))throw new IOException("Configuration changed during migration; reload before applying it.");
+        String base=file.getFileName()+".before-schema-"+ConfigMigrator.CURRENT_SCHEMA_VERSION;
+        Path backup=file.resolveSibling(base);int suffix=1;
+        while(Files.exists(backup))backup=file.resolveSibling(base+"-"+suffix++);
+        Path temporary=Files.createTempFile(directory,".config-backup-", ".tmp");
+        try{
+            try(FileChannel channel=FileChannel.open(temporary,StandardOpenOption.WRITE,StandardOpenOption.TRUNCATE_EXISTING)){
+                java.nio.ByteBuffer buffer=java.nio.ByteBuffer.wrap(original);while(buffer.hasRemaining())channel.write(buffer);channel.force(true);
+            }
+            try{Files.move(temporary,backup,StandardCopyOption.ATOMIC_MOVE);}catch(AtomicMoveNotSupportedException e){throw new IOException("Config filesystem does not support atomic migration backups",e);}
+        }finally{Files.deleteIfExists(temporary);}
+    }
     private void migrateLegacyYaml()throws IOException,ConfigValidationException{
         Path legacy=legacyFile;if(legacy==null||Files.exists(file)||!Files.exists(legacy))return;
         Map<String,Object> parsed;
         try{parsed=new ObjectMapper(new YAMLFactory()).readValue(Files.readAllBytes(legacy),MAP_TYPE);}
         catch(Exception error){throw new ConfigValidationException(List.of("Legacy YAML could not be read; it was left untouched: "+error.getMessage()));}
         int version=parsed.get("schema_version") instanceof Number n?n.intValue():-1;if(version<1||version>ConfigMigrator.CURRENT_SCHEMA_VERSION)throw new ConfigValidationException(List.of("Legacy YAML has an unsupported schema version"));
-        ConfigMigrator.migrateToCurrentSchema(parsed,true);List<String> errors=ConfigValidator.validate(parsed);if(!errors.isEmpty())throw new ConfigValidationException(errors);
+        ConfigMigrator.migrateToCurrentSchema(parsed,true,directory);List<String> errors=ConfigValidator.validate(parsed);if(!errors.isEmpty())throw new ConfigValidationException(errors);
         Path backup=legacy.resolveSibling("config.yaml.before-json");if(Files.exists(backup))throw new IOException("Legacy backup already exists; refusing to overwrite "+backup);
         Files.copy(legacy,backup);try{atomicWrite(mapper.writeValueAsBytes(parsed));}catch(IOException|RuntimeException failure){Files.deleteIfExists(file);throw failure;}
     }

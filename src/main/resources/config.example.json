@@ -1,5 +1,5 @@
 {
-  "schema_version" : 5,
+  "schema_version" : 6,
   "app" : "event-sound-studio",
   "active_profile" : "desk",
   "graph_routes" : [ ],
@@ -467,6 +467,15 @@
     "favorite" : false,
     "builtin" : true
   }, {
+    "id" : "octine-right-click-single",
+    "name" : "Тактильный правый клик (один импульс)",
+    "path" : "assets/sounds/octine-right-click-single.wav",
+    "format" : "pcm_wav",
+    "volume" : 1.0,
+    "tags" : [ "тактильный", "мышь", "низкий" ],
+    "favorite" : false,
+    "builtin" : true
+  }, {
     "id" : "octine-enter",
     "name" : "Тактильный Enter",
     "path" : "assets/sounds/octine-enter.wav",
@@ -845,7 +854,7 @@
   }, {
     "id" : "mouse-right-click",
     "event" : "button:BTN_RIGHT:press",
-    "sound" : "octine-right-click",
+    "sound" : "octine-right-click-single",
     "enabled" : true,
     "priority" : 20,
     "volume" : 1.0,
