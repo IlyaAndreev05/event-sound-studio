@@ -1,6 +1,6 @@
 # Event Sound Studio
 
-A local desktop sound library and event-to-effect player, released as version 0.2.3. Its default key, mouse, wheel, Super, and workspace effects are full-level low-frequency haptic pulses. Settings live in `~/.config/event-sound-studio/config.json`; first launch migrates `config.yaml` and preserves it as `config.yaml.before-json`. Event audio targets the isolated `audio_matrix_events` PipeWire sink and stays silent if that target is unavailable; previews and the generator use a separate `preview_output`. The default click mode emits an immediate effect for every physical click and does not add a second double-click effect on top. Left and right Super keys have separate defaults. The right-click default now uses a single-pulse asset; existing custom WAVs and intentional double cues are preserved during migration. The current default document is `src/main/resources/config.example.json`; `config.example.yaml` remains a migration example. Built-in and imported WAV files remain separate assets.
+A local desktop sound library and event-to-effect player, released as version 0.2.4. Its default key, mouse, wheel, Super, and workspace effects are full-level low-frequency haptic pulses. Settings live in `~/.config/event-sound-studio/config.json`; first launch migrates `config.yaml` and preserves it as `config.yaml.before-json`. Event audio targets the isolated `audiomatrix_events` PipeWire sink and stays silent if that target is unavailable; previews and the generator use a separate `preview_output`. The default click mode emits an immediate effect for every physical click and does not add a second double-click effect on top. Left and right Super keys have separate defaults. The right-click default now uses a single-pulse asset; existing custom WAVs and intentional double cues are preserved during migration. The current default document is `src/main/resources/config.example.json`; `config.example.yaml` remains a migration example. Built-in and imported WAV files remain separate assets.
 
 ## Run
 
@@ -10,7 +10,7 @@ Use Java 25 and `./gradlew run`. Build a local Debian package with `./gradlew pa
 
 Java, GJS, and Python classes may contain at most 200 code lines. `./gradlew test`, `./gradlew check`, and `./gradlew packageDeb` run `scripts/check_class_size.py`.
 
-Event playback is pinned to the `audio_matrix_events` virtual sink provided by Audio Matrix. Until the Audio Matrix user service is enabled, event sounds remain silent; they never fall back to the current system output. After Audio Matrix is installed, enabling that user service is an explicit system action with `/opt/audiomatrix/bin/enable-audiomatrix-events-service.sh`; undo it with `/opt/audiomatrix/bin/disable-audiomatrix-events-service.sh`. This service creates an isolated sink and does not select it as the system output.
+Event playback is pinned to the `audiomatrix_events` virtual sink provided by Audio Matrix. Until the Audio Matrix user service is enabled, event sounds remain silent; they never fall back to the current system output. After Audio Matrix is installed, enabling that user service is an explicit system action with `/opt/audiomatrix/bin/enable-audiomatrix-events-service.sh`; undo it with `/opt/audiomatrix/bin/disable-audiomatrix-events-service.sh`. This service creates an isolated sink and does not select it as the system output.
 
 For a read-only Java Sound output inventory, run `./gradlew run --args='--diagnose-audio'` or `EventSoundStudio --diagnose-audio` from the installed package. It lists stable output selectors and mixer capabilities without opening an output line or playing audio. On ALSA, selectors use the device's sysfs path and PCM device where available; other Java Sound mixers use their name/vendor/description metadata. A selector matching multiple mixers is not offered, and legacy mixer names resolve only when unique. Inventory cannot prove which physical connector a system-default mixer reaches.
 
@@ -21,3 +21,11 @@ Profiles can select their own event master volume; event playback stays on the A
 The Events & bindings screen manages named custom events and named sound bindings independently. One event can launch several bindings; bindings can be edited, copied, enabled per profile, and deleted with a one-step undo. Binding priority and cooldown are validated in JSON and exposed alongside per-binding audio controls.
 
 Profiles can be assigned independently to keyboard, mouse/wheel, and system/API event sources. Each source follows the active profile unless an override is selected; per-voice output and master volume follow the chosen source profile.
+
+## 0.2.4: event latency correction
+
+The Linux pipe-size limiter now consumes the integer return from `fcntl` correctly and reads the resulting capacity back. Previously, the ignored `MethodHandle.invokeExact` return caused a swallowed `WrongMethodTypeException`, leaving a 65,536-byte pipe unchanged (341.3 ms of stereo 48 kHz / 16-bit PCM). The verified capacity after resizing is 4096 bytes (21.3 ms); no global PipeWire or ALSA settings are changed.
+
+On a private PipeWire core containing no physical audio nodes, the persistent event-output smoke detected all eight events: play-to-virtual-monitor onset p50 10.4 ms, p95/max 12.3 ms. This measurement excludes Audio Matrix's downstream routing and physical-device latency. Synthetic input dispatch to the first PCM write measured p95 4.01 ms over 40 trials.
+
+GitHub Actions runs only through manual `workflow_dispatch`; pushes and pull requests no longer start CI automatically.

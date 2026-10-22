@@ -24,30 +24,52 @@ final class LinuxPipeBudget {
         }
     }
 
-    /** Shrinks the child's stdin pipe on a best-effort basis; a denied fcntl leaves the stream usable. */
+    /** Shrinks the child's stdin pipe on a best-effort basis; returns the observed capacity in bytes. */
     static void shrink(Process process) { shrink(process, 0); }
 
-    static void shrink(Process process, int childFd) {
-        if (FCNTL == null || process == null || !process.isAlive()) return;
+    static int shrink(Process process, int childFd) {
+        int fd = pipeFd(process, childFd);
+        if (fd < 0) return -1;
         try {
-            String pipe = Files.readSymbolicLink(Path.of("/proc/" + process.pid() + "/fd/" + childFd)).toString();
-            if (!pipe.startsWith("pipe:[")) return;
-            int fd = -1;
-            try (Stream<Path> paths = Files.list(Path.of("/proc/self/fd"))) {
-                for (Path path : paths.toList()) {
-                    try {
-                        if (pipe.equals(Files.readSymbolicLink(path).toString())) {
-                            fd = Integer.parseInt(path.getFileName().toString());
-                            break;
-                        }
-                    } catch (Exception ignored) { }
-                }
+            int current = capacity(fd);
+            if (current > PIPE_BYTES) {
+                int resized = (int) FCNTL.invokeExact(fd, F_SETPIPE_SZ, PIPE_BYTES);
+                if (resized < 0) return capacity(fd);
             }
-            if (fd < 0) return;
-            int current = (int) FCNTL.invokeExact(fd, F_GETPIPE_SZ, 0);
-            if (current > PIPE_BYTES) FCNTL.invokeExact(fd, F_SETPIPE_SZ, PIPE_BYTES);
+            return capacity(fd);
         } catch (Throwable ignored) {
             // Non-Linux platforms and restricted native access keep the default pipe.
+            return -1;
+        }
+    }
+
+    static int capacityBytes(Process process, int childFd) {
+        int fd = pipeFd(process, childFd);
+        if (fd < 0) return -1;
+        try {
+            return capacity(fd);
+        } catch (Throwable ignored) {
+            return -1;
+        }
+    }
+
+    private static int capacity(int fd) throws Throwable {
+        return (int) FCNTL.invokeExact(fd, F_GETPIPE_SZ, 0);
+    }
+
+    private static int pipeFd(Process process, int childFd) {
+        if (FCNTL == null || process == null || !process.isAlive() || childFd < 0) return -1;
+        try {
+            String pipe = Files.readSymbolicLink(Path.of("/proc/" + process.pid() + "/fd/" + childFd)).toString();
+            if (!pipe.startsWith("pipe:[")) return -1;
+            try (Stream<Path> paths = Files.list(Path.of("/proc/self/fd"))) {
+                return paths.filter(path -> {
+                    try { return pipe.equals(Files.readSymbolicLink(path).toString()); }
+                    catch (Exception ignored) { return false; }
+                }).mapToInt(path -> Integer.parseInt(path.getFileName().toString())).findFirst().orElse(-1);
+            }
+        } catch (Throwable ignored) {
+            return -1;
         }
     }
 }

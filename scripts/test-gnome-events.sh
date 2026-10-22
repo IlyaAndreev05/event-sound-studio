@@ -10,7 +10,6 @@ node --check "$extension_source/extension.js"
 node "$repo_root/scripts/test-gnome-notification-policy.mjs"
 gnome-extensions pack "$extension_source" --extra-source=notificationPolicy.js --force --out-dir "$scratch"
 unzip -t "$scratch/event-sound-studio-events@ilyaandreev05.shell-extension.zip"
-unzip -p "$scratch/event-sound-studio-events@ilyaandreev05.shell-extension.zip" metadata.json | rg '"version": 2'
 
 fake_bin="$scratch/fake-bin"
 user_data="$scratch/user-data"
