@@ -8,11 +8,8 @@ import javax.sound.sampled.SourceDataLine;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -84,6 +81,7 @@ public final class AudioEngine implements AutoCloseable {
 
     private void run() {
         List<Voice> voices = new ArrayList<>();Map<String,OutputState> outputs=liveOutputs;long frameClock=0;
+        List<String> neededOutputs=new ArrayList<>();List<OutputState> outputStates=new ArrayList<>();
         long deadline=System.nanoTime(); final long blockNanos=1_000_000_000L*BLOCK_FRAMES/48_000;
         while (!closed.get()) {
             RenderSettings render=settings.get();
@@ -100,10 +98,14 @@ public final class AudioEngine implements AutoCloseable {
                 if("queue".equals(next.overlap()))start=voices.stream().filter(v->v.voiceKey.equals(next.voiceKey())).mapToLong(Voice::endFrame).max().orElse(frameClock);
                 voices.add(new Voice(next,start));
             }
-            Set<String> neededOutputs=new HashSet<>();neededOutputs.add(MixerOutputSelector.AUDIO_MATRIX_EVENTS);voices.forEach(v->neededOutputs.add(v.output));
-            for(String route:neededOutputs)outputs.computeIfAbsent(route,ignored->new OutputState(route));
-            for(OutputState output:outputs.values()){Arrays.fill(output.mix,0);output.starts=0;}
-            for(int frame=0;frame<BLOCK_FRAMES;frame++){
+            neededOutputs.clear();neededOutputs.add(MixerOutputSelector.AUDIO_MATRIX_EVENTS);
+            for(int v=0;v<voices.size();v++){String route=voices.get(v).output;if(!neededOutputs.contains(route))neededOutputs.add(route);}
+            for(int i=0;i<neededOutputs.size();i++){
+                String route=neededOutputs.get(i);OutputState existing=outputs.get(route);
+                if(existing==null){existing=new OutputState(route);outputs.put(route,existing);outputStates.add(existing);}
+            }
+            for(int i=0;i<outputStates.size();i++){OutputState output=outputStates.get(i);output.starts=0;output.produced=false;}
+            if(!voices.isEmpty())for(int frame=0;frame<BLOCK_FRAMES;frame++){
                 long absoluteFrame=frameClock+frame;
                 for(int v=voices.size()-1;v>=0;v--){
                     Voice voice=voices.get(v);
@@ -113,6 +115,7 @@ public final class AudioEngine implements AutoCloseable {
                         if(voice.repeatsLeft>1){voice.repeatsLeft--;voice.position=0;voice.startFrame=absoluteFrame+REPEAT_GAP_FRAMES;continue;}
                         voices.remove(v);continue;
                     }
+                    if(!route.produced){Arrays.fill(route.mix,0f);route.produced=true;}
                     if(!voice.rendered){voice.rendered=true;route.starts++;}
                     int channel=voice.position*voice.sound.channels();
                     float left=voice.sound.samples()[channel]; float right=voice.sound.channels()==1?left:voice.sound.samples()[channel+1];
@@ -121,11 +124,13 @@ public final class AudioEngine implements AutoCloseable {
                     route.mix[frame*2]+=left*gain*(float)leftPan; route.mix[frame*2+1]+=right*gain*(float)rightPan; voice.position++;
                 }
             }
-            for(OutputState route:outputs.values())if(route.worker.ready()){
-                for(int i=0;i<route.mix.length;i++){
-                    float sample=route.mix[i]; if(Math.abs(sample)>1f)clippedSamples.incrementAndGet();
+            for(int i=0;i<outputStates.size();i++){
+                OutputState route=outputStates.get(i);if(!route.worker.ready())continue;
+                if(!route.produced){route.worker.offer(route.silence,0);continue;}
+                for(int s=0;s<route.mix.length;s++){
+                    float sample=route.mix[s]; if(Math.abs(sample)>1f)clippedSamples.incrementAndGet();
                     if(render.limiter()) sample=(float)(Math.tanh(sample*1.15)/Math.tanh(1.15)); else sample=Math.max(-1,Math.min(1,sample));
-                    int value=Math.round(sample*32767); route.output[i*2]=(byte)value;route.output[i*2+1]=(byte)(value>>8);
+                    int value=Math.round(sample*32767); route.output[s*2]=(byte)value;route.output[s*2+1]=(byte)(value>>8);
                 }
                 if(!route.worker.offer(route.output,route.starts))droppedRequests.addAndGet(route.starts);
             }
@@ -135,7 +140,7 @@ public final class AudioEngine implements AutoCloseable {
             if(remaining>0)java.util.concurrent.locks.LockSupport.parkNanos(remaining);
             else if(remaining < -blockNanos*8)deadline=System.nanoTime();
         }
-        outputs.values().forEach(OutputState::close);
+        outputStates.forEach(OutputState::close);
         announce("Audio engine stopped");
     }
     private SourceDataLine openLine(String output)throws Exception{
@@ -169,7 +174,7 @@ public final class AudioEngine implements AutoCloseable {
         long endFrame(){return startFrame+Math.max(0,sound.frames()-position)+(long)Math.max(0,repeatsLeft-1)*(sound.frames()+REPEAT_GAP_FRAMES);}
     }
     private final class OutputState{
-        final float[] mix=new float[BLOCK_FRAMES*2];final byte[] output=new byte[BLOCK_FRAMES*4];final PcmOutputWorker worker;int starts;
+        final float[] mix=new float[BLOCK_FRAMES*2];final byte[] output=new byte[BLOCK_FRAMES*4];final byte[] silence=new byte[BLOCK_FRAMES*4];final PcmOutputWorker worker;int starts;boolean produced;
         OutputState(String selector){worker=new PcmOutputWorker(selector,lineProvider,AudioEngine.this::announce,output.length,playedRequests);}
         void close(){worker.close();}
     }

@@ -67,4 +67,6 @@ public final class AppShell extends AppShellUiPart04 {
         super(store, engine, library, router, scanner, input, dispatcher, api, theme);
     }
     public void setQuitAction(Runnable action){quitAction=java.util.Objects.requireNonNull(action);}
+    public void refresh(){requestShellRefresh();}
+    public void onStageVisibilityChanged(boolean visible){if(visible)requestShellRefresh();}
 }

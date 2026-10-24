@@ -128,7 +128,7 @@ abstract class AppShellUiPart04 extends AppShellUiPart03 {
         return root;
     }
 
-    protected void loadSounds(Map<String,Object> config){String hash=soundHash(config);soundSetHash=hash;library.loadAll(maps(config.get("sounds"))).whenComplete((entries,error)->Platform.runLater(()->{if(error!=null)setNotice(message(error),true);else{Set<String> available=new java.util.HashSet<>();entries.stream().filter(SoundLibrary.Entry::ready).forEach(entry->available.add(entry.id()));selectedSoundExports.retainAll(available);refreshSoundExportSelection();router.update(store.snapshot());setNotice(t("Звуковая библиотека загружена.","Sound library loaded."),false);render(page);}}));}
+    protected void loadSounds(Map<String,Object> config){String hash=soundHash(config);soundSetHash=hash;library.loadAll(maps(config.get("sounds"))).whenComplete((entries,error)->Platform.runLater(()->{if(runtimeClosed)return;if(error!=null)setNotice(message(error),true);else{Set<String> available=new java.util.HashSet<>();entries.stream().filter(SoundLibrary.Entry::ready).forEach(entry->available.add(entry.id()));selectedSoundExports.retainAll(available);refreshSoundExportSelection();router.update(store.snapshot());setNotice(t("Звуковая библиотека загружена.","Sound library loaded."),false);requestShellRefresh();}}));}
 
     protected void applyRuntime(Map<String,Object> config){
         if(runtimeClosed)return;
@@ -137,10 +137,10 @@ abstract class AppShellUiPart04 extends AppShellUiPart03 {
             String nextHash=soundHash(config);if(!nextHash.equals(soundSetHash)){soundSetHash=nextHash;library.loadAll(maps(config.get("sounds"))).thenRun(()->router.update(store.snapshot()));}
             router.update(config);dispatcher.updateConfig(config);
             Map<String,Object> settings=map(config.get("settings"));Map<String,Object> inputSettings=map(settings.get("input"));Set<String> allow=new java.util.HashSet<>(list(inputSettings.get("device_allowlist")).stream().map(String::valueOf).toList());
-            input.configure(Boolean.TRUE.equals(inputSettings.get("enable_keyboard")),Boolean.TRUE.equals(inputSettings.get("enable_mouse")),allow,dispatcher::accept,value->{sourceState=value;Platform.runLater(()->{sourceStatus.setText(value);renderIf(Page.HOME);renderIf(Page.INPUTS);});});
+            input.configure(Boolean.TRUE.equals(inputSettings.get("enable_keyboard")),Boolean.TRUE.equals(inputSettings.get("enable_mouse")),allow,dispatcher::accept,value->{if(value==null||value.equals(sourceState))return;sourceState=value;Platform.runLater(()->{if(runtimeClosed||!value.equals(sourceState))return;if(!uiVisible()){refreshDirty.set(true);return;}sourceStatus.setText(value);requestStatusRefresh();});});
             boolean apiWanted=Boolean.TRUE.equals(map(config.get("api")).get("enabled"));try{if(apiWanted&&!api.enabled())apiState=api.enable();else if(!apiWanted&&api.enabled()){api.disable();apiState=api.status();}}catch(Exception e){sourceState="Local API unavailable: "+message(e);}
             boolean gnomeWanted=Boolean.TRUE.equals(inputSettings.get("enable_gnome"));if(gnomeWanted&&!gnomeEnabled){gnome=new GnomeEventBridge(this::routeGnomeEvent);gnome.start();gnomeEnabled=true;}else if(!gnomeWanted&&gnomeEnabled){gnome.close();gnome=null;gnomeEnabled=false;}
-            Platform.runLater(()->renderIf(Page.SETTINGS));
+            Platform.runLater(()->requestRenderIf(Page.SETTINGS));
         });}catch(java.util.concurrent.RejectedExecutionException stopped){if(!runtimeClosed)throw stopped;}
     }
 

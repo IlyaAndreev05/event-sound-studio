@@ -71,6 +71,8 @@ public final class EventSoundStudioApp extends Application {
         shell=new AppShell(store,engine,library,router,scanner,input,dispatcher,api,theme);
         Scene scene=new Scene(shell,1320,850);scene.getStylesheets().add(getClass().getResource("/styles/app.css").toExternalForm());
         theme.apply(scene,AppShell.setting(store.snapshot(),"settings","theme","system"));stage.setTitle("Event Sound Studio");stage.setMinWidth(1024);stage.setMinHeight(680);stage.setScene(scene);
+        stage.showingProperty().addListener((observable,oldValue,showing)->{if(shell!=null)shell.onStageVisibilityChanged(showing&&!stage.isIconified());});
+        stage.iconifiedProperty().addListener((observable,oldValue,iconified)->{if(shell!=null)shell.onStageVisibilityChanged(stage.isShowing()&&!iconified);});
         shell.setQuitAction(this::quitApplication);
         stage.setOnCloseRequest(event->{
             event.consume();
@@ -82,7 +84,7 @@ public final class EventSoundStudioApp extends Application {
         if(instanceControl!=null)instanceControl.setHandler(command->Platform.runLater(()->{
             if(runtimeClosed)return;
             if("quit".equals(command))quitApplication();
-            else if("open".equals(command)){stage.setIconified(false);stage.show();stage.toFront();stage.requestFocus();}
+            else if("open".equals(command)){stage.setIconified(false);stage.show();stage.toFront();stage.requestFocus();if(shell!=null)shell.refresh();}
         }));
     }
 

@@ -63,9 +63,9 @@ import java.util.function.Consumer;
 abstract class AppShellUiPart01 extends AppShellState {
     protected AppShellUiPart01(ConfigStore store, AudioEngine engine, SoundLibrary library, EventRouter router, EvdevDeviceScanner scanner, EvdevInputService input, InputEventDispatcher dispatcher, LocalControlApi api, ThemeManager theme) { super(store, engine, library, router, scanner, input, dispatcher, api, theme); }
 
-    public void start(){engine.start(value->Platform.runLater(()->{audioState=value;engineStatus.setText(value);renderIf(Page.HOME);renderIf(Page.SETTINGS);}));refreshAudioOutputs();Map<String,Object> config=store.snapshot();loadSounds(config);applyRuntime(config);}
+    public void start(){engine.start(value->{if(value==null||value.equals(audioState))return;audioState=value;Platform.runLater(()->{if(runtimeClosed||!value.equals(audioState))return;if(!uiVisible()){refreshDirty.set(true);return;}engineStatus.setText(value);requestRenderIf(Page.HOME);});});refreshAudioOutputs();Map<String,Object> config=store.snapshot();loadSounds(config);applyRuntime(config);}
 
-    protected void refreshAudioOutputs(){if(runtimeClosed||outputDiscoveryRunning)return;outputDiscoveryRunning=true;Thread.ofVirtual().name("ess-output-discovery").start(()->{List<AudioEngine.OutputOption> found;try{found=AudioEngine.availablePreviewOutputOptions();}catch(RuntimeException error){Platform.runLater(()->{outputDiscoveryRunning=false;if(!runtimeClosed)setNotice(t("Не удалось обновить список выходов: ","Could not refresh audio outputs: ")+message(error),true);});return;}Platform.runLater(()->{outputDiscoveryRunning=false;if(runtimeClosed)return;audioOutputOptions=List.copyOf(found);audioOutputs=found.stream().map(AudioEngine.OutputOption::selector).toList();setNotice(t("Список выходов для предпрослушивания обновлён.","Preview output list refreshed."),false);render(page);});});}
+    protected void refreshAudioOutputs(){if(runtimeClosed||outputDiscoveryRunning)return;outputDiscoveryRunning=true;Thread.ofVirtual().name("ess-output-discovery").start(()->{List<AudioEngine.OutputOption> found;try{found=AudioEngine.availablePreviewOutputOptions();}catch(RuntimeException error){Platform.runLater(()->{outputDiscoveryRunning=false;if(!runtimeClosed)setNotice(t("Не удалось обновить список выходов: ","Could not refresh audio outputs: ")+message(error),true);});return;}Platform.runLater(()->{outputDiscoveryRunning=false;if(runtimeClosed)return;audioOutputOptions=List.copyOf(found);audioOutputs=found.stream().map(AudioEngine.OutputOption::selector).toList();setNotice(t("Список выходов для предпрослушивания обновлён.","Preview output list refreshed."),false);requestShellRefresh();});});}
 
     protected void buildChrome(){
         sidebar.getStyleClass().add("sidebar");HBox brand=new HBox(9,new Label("ES"),new Label("Event Sound Studio"));brand.getChildren().getFirst().getStyleClass().add("brand-mark");brand.getChildren().getLast().getStyleClass().add("brand");brand.setAlignment(Pos.CENTER_LEFT);sidebar.getChildren().add(brand);sidebar.getChildren().add(new javafx.scene.control.Separator());
@@ -75,8 +75,6 @@ abstract class AppShellUiPart01 extends AppShellState {
     }
 
     protected void render(Page selected){page=selected;ToggleButton chosen=nav.get(selected);if(chosen!=null)chosen.setSelected(true);pageTitle.setText(label(selected));Node content=switch(selected){case HOME->homePage();case SOUNDS->soundsPage();case GENERATOR->generatorPage();case BINDINGS->bindingsPage();case INPUTS->inputsPage();case PROFILES->profilesPage();case SETTINGS->settingsPage();};ScrollPane scroll=new ScrollPane(content);scroll.setFitToWidth(true);scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);body.setCenter(scroll);if(notice.isVisible())body.setBottom(notice);}
-
-    protected void renderIf(Page expected){if(page==expected)render(page);}
 
     protected VBox page(String subtitle){VBox box=new VBox(18);box.getStyleClass().add("page-content");box.getChildren().add(labelNode(subtitle,"page-subtitle"));return box;}
 

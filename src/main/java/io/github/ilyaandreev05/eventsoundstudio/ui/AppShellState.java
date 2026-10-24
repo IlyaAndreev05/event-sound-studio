@@ -58,6 +58,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 abstract class AppShellState extends AppShellContract {
@@ -68,13 +69,19 @@ protected final ConfigStore store;protected final AudioEngine engine;protected f
     protected final VBox sidebar=new VBox(8);protected final BorderPane body=new BorderPane();protected final Label pageTitle=new Label();protected final Label engineStatus=new Label();protected final Label sourceStatus=new Label();protected final Label notice=new Label();protected final TextField search=new TextField();protected final Map<Page,ToggleButton> nav=new LinkedHashMap<>();protected final Set<String> selectedBindings=new java.util.HashSet<>();protected final Set<String> selectedSoundExports=new java.util.HashSet<>();protected Label soundExportCount;protected Button exportSoundSetButton;protected Runnable undoAction;protected String undoLabel="";
     protected volatile Page page=Page.HOME;protected volatile String audioState="Audio engine starting";protected volatile String sourceState="Global input is off";protected volatile LocalControlApi.Status apiState=new LocalControlApi.Status(false,-1,null);protected volatile String soundSetHash="";protected volatile List<String> audioOutputs=List.of("system_default");protected volatile List<AudioEngine.OutputOption> audioOutputOptions=List.of(new AudioEngine.OutputOption("system_default","system_default"));protected volatile boolean outputDiscoveryRunning;protected volatile boolean gnomeEnabled;protected volatile boolean runtimeClosed;protected volatile GnomeEventBridge gnome;
     protected Runnable quitAction=Platform::exit;
+    private final AtomicBoolean refreshPending=new AtomicBoolean();
+    protected final AtomicBoolean refreshDirty=new AtomicBoolean();
 
 
     protected AppShellState(ConfigStore store,AudioEngine engine,SoundLibrary library,EventRouter router,EvdevDeviceScanner scanner,EvdevInputService input,InputEventDispatcher dispatcher,LocalControlApi api,ThemeManager theme){
         this.store=store;this.engine=engine;this.library=library;this.router=router;this.scanner=scanner;this.input=input;this.dispatcher=dispatcher;this.api=api;this.theme=theme;
         getStyleClass().add("app-shell");buildChrome();render(Page.HOME);search.textProperty().addListener((o,a,b)->render(page));
-        store.addListener(event->{if(runtimeClosed)return;if(event.message().startsWith("Configuration rejected:")){Platform.runLater(()->setNotice(event.message(),true));return;}applyRuntime(event.config());if("Configuration saved".equals(event.message()))return;Platform.runLater(()->{setNotice(event.message(),false);render(page);});});
+        store.addListener(event->{if(runtimeClosed)return;if(event.message().startsWith("Configuration rejected:")){Platform.runLater(()->{if(runtimeClosed)return;setNotice(event.message(),true);});return;}applyRuntime(event.config());if("Configuration saved".equals(event.message()))return;Platform.runLater(()->{if(runtimeClosed)return;setNotice(event.message(),false);requestShellRefresh();});});
     }
+    protected boolean uiVisible(){javafx.stage.Window window=getScene()==null?null:getScene().getWindow();if(window instanceof javafx.stage.Stage stage)return stage.isShowing()&&!stage.isIconified();return window!=null&&window.isShowing();}
+    protected void requestShellRefresh(){if(runtimeClosed)return;refreshDirty.set(true);if(!refreshPending.compareAndSet(false,true))return;Platform.runLater(()->{refreshPending.set(false);if(runtimeClosed)return;if(!uiVisible())return;if(!refreshDirty.compareAndSet(true,false))return;engineStatus.setText(audioState);sourceStatus.setText(sourceState);render(page);});}
+    protected void requestRenderIf(Page expected){if(runtimeClosed||page!=expected)return;requestShellRefresh();}
+    protected void requestStatusRefresh(){if(page==Page.HOME||page==Page.INPUTS)requestShellRefresh();}
     protected static Path ensureWavSuffix(Path path){return path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".wav")?path:path.resolveSibling(path.getFileName()+".wav");}
     protected static int selectedStart(double fraction,int frames){return Math.max(0,Math.min(Math.max(0,frames-1),(int)Math.floor(fraction*frames)));}
     protected static int selectedEnd(double fraction,int frames){return Math.max(0,Math.min(frames,(int)Math.ceil(fraction*frames)));}

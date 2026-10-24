@@ -67,7 +67,6 @@ abstract class AppShellContract extends BorderPane {
     protected abstract void refreshAudioOutputs();
     protected abstract void buildChrome();
     protected abstract void render(Page selected);
-    protected abstract void renderIf(Page expected);
     protected abstract VBox page(String subtitle);
     protected abstract VBox card(String title);
     protected abstract Label labelNode(String text,String style);
